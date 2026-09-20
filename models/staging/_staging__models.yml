@@ -1,0 +1,235 @@
+version: 2
+
+# Column definitions live in models/_column_definitions.md. The columns that
+# survive unchanged from the source keep the source's definition; the columns
+# staging calculates (flags, normalised codes, the shared contract names) carry
+# their own, and the marts reference the same blocks again downstream.
+
+models:
+  - name: base_payments__keyed
+    description: >
+      Every source row with a stable surrogate key attached, and nothing else
+      changed. Exists because the export has no usable primary key: hashing the
+      business payload and adding an occurrence index means byte-identical rows
+      stay distinct and addressable, so the de-duplication logic downstream can
+      classify them instead of losing them.
+    columns:
+      - name: transaction_key
+        description: "{{ doc('col__transaction_key') }}"
+        tests:
+          - unique
+          - not_null
+      - name: record_hash
+        description: "{{ doc('col__record_hash') }}"
+      - name: record_occurrence
+        description: "{{ doc('col__record_occurrence') }}"
+
+  - name: stg_payments__vendor1
+    description: >
+      Vendor 1's export on the shared transaction contract. Vendor-1 specifics:
+      the authorisation code column carries decline text rather than auth codes
+      and is nulled and flagged; no timezone is ever supplied; and the shared
+      3-D Secure column holds an enrolment flag, not an authentication outcome.
+    columns:
+      # --- keys, carried down from the source
+      - name: transaction_key
+        description: "{{ doc('col__transaction_key') }}"
+        tests:
+          - unique
+          - not_null
+      - name: psp_reference
+        description: "{{ doc('col__psp_reference') }}"
+      - name: scheme_reference
+        description: "{{ doc('col__scheme_reference') }}"
+      - name: has_precision_lost_scheme_ref
+        description: "{{ doc('col__has_precision_lost_scheme_ref') }}"
+
+      # --- gateway and merchant
+      - name: gateway
+        description: "{{ doc('col__gateway') }}"
+        tests:
+          - not_null
+      - name: merchant_account
+        description: "{{ doc('col__merchant_account') }}"
+
+      # --- money
+      - name: currency
+        description: "{{ doc('col__currency') }}"
+      - name: amount
+        description: "{{ doc('col__amount') }}"
+
+      # --- timing
+      - name: creation_clock_raw
+        description: "{{ doc('col__creation_clock_raw') }}"
+      - name: creation_seconds_into_hour
+        description: "{{ doc('col__creation_seconds_into_hour') }}"
+      - name: created_at
+        description: "{{ doc('col__created_at') }}"
+      - name: has_resolvable_timestamp
+        description: "{{ doc('col__has_resolvable_timestamp') }}"
+      - name: source_timezone
+        description: "{{ doc('col__source_timezone') }}"
+
+      # --- instrument
+      - name: payment_method_raw
+        description: "{{ doc('col__payment_method_raw') }}"
+      - name: card_product
+        description: "{{ doc('col__card_product') }}"
+      - name: card_scheme
+        description: "{{ doc('col__card_scheme') }}"
+      - name: card_bin
+        description: "{{ doc('col__card_bin') }}"
+      - name: has_invalid_card_bin
+        description: "{{ doc('col__has_invalid_card_bin') }}"
+      - name: card_last_4_raw
+        description: "{{ doc('col__card_last_4_raw') }}"
+      - name: has_usable_card_last_4
+        description: "{{ doc('col__has_usable_card_last_4') }}"
+
+      # --- initiator
+      - name: transaction_type_raw
+        description: "{{ doc('col__transaction_type_raw') }}"
+      - name: transaction_initiator
+        description: "{{ doc('col__transaction_initiator') }}"
+
+      # --- fan and geography
+      - name: fan_reference
+        description: "{{ doc('col__fan_reference') }}"
+      - name: has_placeholder_fan_reference
+        description: "{{ doc('col__has_placeholder_fan_reference') }}"
+      - name: fan_email_token
+        description: "{{ doc('col__fan_email_token') }}"
+      - name: fan_country
+        description: "{{ doc('col__fan_country') }}"
+      - name: fan_ip
+        description: "{{ doc('col__fan_ip') }}"
+      - name: billing_country
+        description: "{{ doc('col__billing_country') }}"
+      - name: issuer_country
+        description: "{{ doc('col__issuer_country') }}"
+      - name: issuer_name
+        description: "{{ doc('col__issuer_name') }}"
+      - name: issuer_bin
+        description: "{{ doc('col__issuer_bin') }}"
+
+      # --- outcome
+      - name: gateway_status
+        description: "{{ doc('col__gateway_status') }}"
+      - name: is_approved
+        description: "{{ doc('col__is_approved') }}"
+      - name: authorisation_code
+        description: "{{ doc('col__authorisation_code') }}"
+      - name: has_sentinel_auth_code
+        description: "{{ doc('col__has_sentinel_auth_code') }}"
+      - name: has_auth_code_contamination
+        description: "{{ doc('col__has_auth_code_contamination') }}"
+      - name: decline_reason_raw
+        description: "{{ doc('col__decline_reason_raw') }}"
+
+      # --- verification signals
+      - name: avs_response_raw
+        description: "{{ doc('col__avs_response_raw') }}"
+      - name: cvc2_response_raw
+        description: "{{ doc('col__cvc2_response_raw') }}"
+      - name: three_ds_enrolment_raw
+        description: "{{ doc('col__three_ds_enrolment_raw') }}"
+      - name: three_ds_outcome_raw
+        description: "{{ doc('col__three_ds_outcome_raw') }}"
+
+  - name: stg_payments__vendor2
+    description: >
+      Vendor 2's export on the same shared contract. Vendor-2 specifics: the
+      authorisation code is genuine, so it is kept; the payment method is the
+      generic literal CC, so the card scheme has to be recovered from the card
+      product; address results arrive as network codes rather than prose; and
+      the shared 3-D Secure column holds an authentication outcome.
+    columns:
+      # Same contract, same definitions: both gateways land on identical column
+      # names and meanings, which is what makes them comparable at all.
+      - name: transaction_key
+        description: "{{ doc('col__transaction_key') }}"
+        tests:
+          - unique
+          - not_null
+      - name: psp_reference
+        description: "{{ doc('col__psp_reference') }}"
+      - name: scheme_reference
+        description: "{{ doc('col__scheme_reference') }}"
+      - name: has_precision_lost_scheme_ref
+        description: "{{ doc('col__has_precision_lost_scheme_ref') }}"
+      - name: gateway
+        description: "{{ doc('col__gateway') }}"
+        tests:
+          - not_null
+      - name: merchant_account
+        description: "{{ doc('col__merchant_account') }}"
+      - name: currency
+        description: "{{ doc('col__currency') }}"
+      - name: amount
+        description: "{{ doc('col__amount') }}"
+      - name: creation_clock_raw
+        description: "{{ doc('col__creation_clock_raw') }}"
+      - name: creation_seconds_into_hour
+        description: "{{ doc('col__creation_seconds_into_hour') }}"
+      - name: created_at
+        description: "{{ doc('col__created_at') }}"
+      - name: has_resolvable_timestamp
+        description: "{{ doc('col__has_resolvable_timestamp') }}"
+      - name: source_timezone
+        description: "{{ doc('col__source_timezone') }}"
+      - name: payment_method_raw
+        description: "{{ doc('col__payment_method_raw') }}"
+      - name: card_product
+        description: "{{ doc('col__card_product') }}"
+      - name: card_scheme
+        description: "{{ doc('col__card_scheme') }}"
+      - name: card_bin
+        description: "{{ doc('col__card_bin') }}"
+      - name: has_invalid_card_bin
+        description: "{{ doc('col__has_invalid_card_bin') }}"
+      - name: card_last_4_raw
+        description: "{{ doc('col__card_last_4_raw') }}"
+      - name: has_usable_card_last_4
+        description: "{{ doc('col__has_usable_card_last_4') }}"
+      - name: transaction_type_raw
+        description: "{{ doc('col__transaction_type_raw') }}"
+      - name: transaction_initiator
+        description: "{{ doc('col__transaction_initiator') }}"
+      - name: fan_reference
+        description: "{{ doc('col__fan_reference') }}"
+      - name: has_placeholder_fan_reference
+        description: "{{ doc('col__has_placeholder_fan_reference') }}"
+      - name: fan_email_token
+        description: "{{ doc('col__fan_email_token') }}"
+      - name: fan_country
+        description: "{{ doc('col__fan_country') }}"
+      - name: fan_ip
+        description: "{{ doc('col__fan_ip') }}"
+      - name: billing_country
+        description: "{{ doc('col__billing_country') }}"
+      - name: issuer_country
+        description: "{{ doc('col__issuer_country') }}"
+      - name: issuer_name
+        description: "{{ doc('col__issuer_name') }}"
+      - name: issuer_bin
+        description: "{{ doc('col__issuer_bin') }}"
+      - name: gateway_status
+        description: "{{ doc('col__gateway_status') }}"
+      - name: is_approved
+        description: "{{ doc('col__is_approved') }}"
+      - name: authorisation_code
+        description: "{{ doc('col__authorisation_code') }}"
+      - name: has_sentinel_auth_code
+        description: "{{ doc('col__has_sentinel_auth_code') }}"
+      - name: has_auth_code_contamination
+        description: "{{ doc('col__has_auth_code_contamination') }}"
+      - name: decline_reason_raw
+        description: "{{ doc('col__decline_reason_raw') }}"
+      - name: avs_response_raw
+        description: "{{ doc('col__avs_response_raw') }}"
+      - name: cvc2_response_raw
+        description: "{{ doc('col__cvc2_response_raw') }}"
+      - name: three_ds_enrolment_raw
+        description: "{{ doc('col__three_ds_enrolment_raw') }}"
+      - name: three_ds_outcome_raw
+        description: "{{ doc('col__three_ds_outcome_raw') }}"

@@ -1,0 +1,6 @@
+analysis,fan_country,vendor1_attempts,vendor1_auth_rate_pct,vendor2_attempts,vendor2_auth_rate_pct,gap_pp,incremental_approvals
+like_for_like_market,US,4166,71.96,2509,63.25,8.71,
+like_for_like_market,GB,562,77.76,60,71.67,6.09,
+like_for_like_market,DE,39,66.67,55,63.64,3.03,
+like_for_like_market,CA,34,76.47,129,68.22,8.25,
+mix_adjusted_total,all markets,,70.43,3634,61.14,9.28,337.0

@@ -1,0 +1,5 @@
+comparison,side,payments,auth_rate_pct,attempted_value_usd,value_approval_pct
+1 provider,vendor1,1804,93.5,68840.0,90.6
+1 provider,vendor2,907,82.8,39158.0,74.7
+2 vendor2 merchant account,merchant_C,296,79.1,13054.0,68.1
+2 vendor2 merchant account,merchant_E,611,84.6,26103.0,78.0

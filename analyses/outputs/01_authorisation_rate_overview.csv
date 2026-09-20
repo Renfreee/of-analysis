@@ -1,0 +1,19 @@
+breakdown,segment,attempts,approvals,auth_rate_pct,attempted_value,declined_value
+card_scheme,Visa,4654,3268,70.22,143190.88,40342.48
+card_scheme,Mastercard,2549,1769,69.4,89408.21,25712.58
+card_scheme,Unknown,1421,812,57.14,42019.15,18118.18
+card_scheme,PIX,8,5,62.5,100.3,44.07
+corridor,domestic,7438,5143,69.14,233374.35,65045.54
+corridor,unknown,853,516,60.49,25152.24,10274.04
+corridor,cross_border,341,195,57.18,16191.95,8897.73
+gateway,vendor1,4998,3632,72.67,160400.66,39934.96
+gateway,vendor2,3634,2222,61.14,114317.88,44282.35
+region,North America (US),6675,4585,68.69,208682.75,59501.39
+region,UK & Ireland,637,491,77.08,22133.91,4186.73
+region,Europe (ex-UK),534,347,64.98,21902.54,9152.0
+region,North America (other),307,173,56.35,9265.84,5153.05
+region,Rest of world,216,127,58.8,5865.26,2553.72
+region,LATAM,163,77,47.24,2644.25,1456.3
+region,ANZ,86,48,55.81,3840.08,1948.43
+region,Unknown,14,6,42.86,383.91,265.69
+total,all,8632,5854,67.82,274718.54,84217.31

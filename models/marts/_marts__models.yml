@@ -1,0 +1,219 @@
+version: 2
+
+# Descriptions come from models/_column_definitions.md. Columns that arrive
+# unchanged from staging reuse the definition written there; columns calculated
+# in the intermediate layer have their own block, which records what they are
+# derived from and which assumption they rest on.
+
+models:
+  - name: fct_payment_attempts
+    description: >
+      Reconciliation-grade transaction fact. One row per authorisation attempt
+      across both gateways, on a single normalised contract, with every data
+      quality defect labelled rather than removed. Filter on is_analysis_eligible
+      for commercial analysis; use the unfiltered table for Finance reconciliation.
+    columns:
+      # --- carried down unchanged from staging
+      - name: transaction_key
+        description: "{{ doc('col__transaction_key') }}"
+        tests:
+          - unique
+          - not_null
+      - name: gateway
+        description: "{{ doc('col__gateway') }}"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['vendor1', 'vendor2']
+      - name: merchant_account
+        description: "{{ doc('col__merchant_account') }}"
+      - name: gateway_status
+        description: "{{ doc('col__gateway_status') }}"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Approved', 'Declined', 'Failed']
+      - name: is_approved
+        description: "{{ doc('col__is_approved') }}"
+        tests:
+          - not_null
+      - name: amount
+        description: "{{ doc('col__amount') }}"
+        tests:
+          - not_null
+      - name: currency
+        description: "{{ doc('col__currency') }}"
+        tests:
+          - not_null
+      - name: card_scheme
+        description: "{{ doc('col__card_scheme') }}"
+      - name: fan_country
+        description: "{{ doc('col__fan_country') }}"
+      - name: issuer_name_std
+        description: "{{ doc('col__issuer_name_std') }}"
+
+      # --- calculated: money
+      - name: amount_usd
+        description: "{{ doc('col__amount_usd') }}"
+        tests:
+          - not_null
+      - name: fx_basis
+        description: "{{ doc('col__fx_basis') }}"
+      - name: is_reporting_currency
+        description: "{{ doc('col__is_reporting_currency') }}"
+      - name: amount_band
+        description: "{{ doc('col__amount_band') }}"
+      - name: creator_share_usd
+        description: "{{ doc('col__creator_share_usd') }}"
+
+      # --- calculated: what kind of payment this is
+      - name: transaction_purpose
+        description: "{{ doc('col__transaction_purpose') }}"
+        tests:
+          - accepted_values:
+              values: ['payment', 'card_verification']
+      - name: initiator_inferred
+        description: "{{ doc('col__initiator_inferred') }}"
+      - name: mit_stage
+        description: "{{ doc('col__mit_stage') }}"
+      - name: revenue_stream
+        description: "{{ doc('col__revenue_stream') }}"
+      - name: payment_group
+        description: "{{ doc('col__payment_group') }}"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['fan-initiated', 'subscription rebill', 'other merchant-initiated', 'card verification', 'unknown']
+
+      # --- calculated: why it was declined
+      - name: decline_reason_std
+        description: "{{ doc('col__decline_reason_std') }}"
+      - name: decline_category
+        description: "{{ doc('col__decline_category') }}"
+        tests:
+          - accepted_values:
+              values:
+                - issuer_soft_decline
+                - issuer_generic
+                - fraud_risk_block
+                - issuer_policy
+                - card_data_issue
+                - authentication
+                - velocity_limit
+                - technical_error
+                - merchant_config
+                - data_quality_anomaly
+      - name: is_retryable_decline
+        description: "{{ doc('col__is_retryable_decline') }}"
+
+      # --- calculated: verification and segmentation
+      - name: avs_outcome
+        description: "{{ doc('col__avs_outcome') }}"
+      - name: three_ds_status
+        description: "{{ doc('col__three_ds_status') }}"
+      - name: issuer_segment
+        description: "{{ doc('col__issuer_segment') }}"
+      - name: region
+        description: "{{ doc('col__region') }}"
+      - name: geo_corridor
+        description: "{{ doc('col__geo_corridor') }}"
+      - name: reporting_date
+        description: "{{ doc('col__reporting_date') }}"
+
+      # --- calculated: what is safe to count
+      - name: is_payment
+        description: "{{ doc('col__is_payment') }}"
+      - name: is_analysis_eligible
+        description: "{{ doc('col__is_analysis_eligible') }}"
+        tests:
+          - not_null
+
+  - name: fct_payments
+    description: >
+      The analysis base: real payments only, excluding $0 card checks and rows
+      with an unresolved data quality problem. Query this for commercial
+      analysis; use fct_payment_attempts to reconcile to the provider.
+    columns:
+      - name: transaction_key
+        description: "{{ doc('col__transaction_key') }}"
+        tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('fct_payment_attempts')
+              field: transaction_key
+      - name: amount_usd
+        description: "{{ doc('col__amount_usd') }}"
+        tests:
+          - not_null
+      - name: creator_share_usd
+        description: "{{ doc('col__creator_share_usd') }}"
+      - name: payment_group
+        description: "{{ doc('col__payment_group') }}"
+      - name: revenue_stream
+        description: "{{ doc('col__revenue_stream') }}"
+      - name: decline_category
+        description: "{{ doc('col__decline_category') }}"
+
+  - name: fct_payment_data_quality
+    description: >
+      One row per attempt with every data quality flag found in the export.
+      Keyed to fct_payment_attempts on transaction_key; used for engineering
+      triage, not for commercial analysis.
+    columns:
+      - name: transaction_key
+        description: "{{ doc('col__transaction_key') }}"
+        tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('fct_payment_attempts')
+              field: transaction_key
+      - name: dq_issue_count
+        description: "{{ doc('col__dq_issue_count') }}"
+        tests:
+          - not_null
+
+  - name: agg_data_quality_summary
+    description: >
+      Task 1 issue register, generated from the row-level flags: one row per
+      defect class with blast radius, severity and owning team.
+    columns:
+      - name: issue_code
+        tests:
+          - unique
+          - not_null
+      - name: severity
+        tests:
+          - accepted_values:
+              values: ['critical', 'high', 'medium']
+
+  - name: agg_gateway_performance
+    description: Headline authorisation performance by gateway, eligible rows only.
+    columns:
+      - name: gateway
+        description: "{{ doc('col__gateway') }}"
+        tests:
+          - unique
+          - not_null
+      - name: auth_rate_pct
+        tests:
+          - not_null
+
+  - name: agg_decline_analysis
+    description: >
+      Decline mix on the normalised cross-gateway taxonomy, sized by count and
+      value and split by recoverability.
+    columns:
+      - name: decline_reason_std
+        description: "{{ doc('col__decline_reason_std') }}"
+        tests:
+          - not_null
+
+  - name: agg_regional_performance
+    description: >
+      Authorisation rate by market with per-gateway splits, used to identify
+      routing opportunities.
+    columns:
+      - name: fan_country
+        description: "{{ doc('col__fan_country') }}"

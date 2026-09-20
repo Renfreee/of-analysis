@@ -1,0 +1,417 @@
+version: 2
+
+models:
+  - name: metricflow_time_spine
+    description: Daily date spine for MetricFlow.
+    config:
+      materialized: table
+    time_spine:
+      standard_granularity_column: date_day
+    columns:
+      - name: date_day
+        granularity: day
+
+semantic_models:
+  - name: payment_attempts
+    label: Fan payment attempts
+    description: >
+      One row per authorisation attempt across both gateways, from
+      fct_payment_attempts. This is the only semantic model payment metrics
+      should be defined on. Payment metrics apply the standard analysis base
+      (is_payment and is_analysis_eligible) inside each metric definition, so
+      a consumer can't accidentally include $0 verification checks, duplicate
+      approvals or status conflicts.
+    model: ref('fct_payment_attempts')
+    defaults:
+      agg_time_dimension: reporting_date
+
+    entities:
+      - name: payment_attempt
+        type: primary
+        expr: transaction_key
+      - name: fan
+        type: foreign
+        expr: fan_email_token
+        description: Tokenised Fan email, the only Fan key present on both gateways.
+      - name: merchant
+        type: foreign
+        expr: merchant_account
+
+    dimensions:
+      - name: reporting_date
+        type: time
+        description: >
+          Reporting month. The export has no usable transaction dates (DQ-01), so
+          every row carries the month from the brief. Swap to the real
+          transaction timestamp once the export is fixed; no metric changes.
+        type_params:
+          time_granularity: month
+
+      # --- where the payment went
+      - name: gateway
+        type: categorical
+      - name: merchant_account
+        type: categorical
+
+      # --- what the payment was (OnlyFans business model)
+      - name: revenue_stream
+        type: categorical
+        description: >
+          fan-present purchase (tips, pay-per-view, new subscriptions),
+          subscription start, subscription renewal, other merchant-initiated,
+          card verification. Inferred; see int_payments__enriched.
+      - name: payment_group
+        type: categorical
+        description: >
+          Like-for-like groups across gateways: fan-initiated (including first
+          subscription charges), subscription rebill, other merchant-initiated.
+          Assumptions documented in int_payments__enriched.
+      - name: initiator_inferred
+        type: categorical
+        description: CIT (Fan present) or MIT (merchant-initiated). Inferred from both gateways' codes.
+      - name: mit_stage
+        type: categorical
+      - name: transaction_purpose
+        type: categorical
+        description: payment or card_verification ($0 checks).
+      - name: amount_band
+        type: categorical
+
+      # --- who paid, with what
+      - name: issuer_segment
+        type: categorical
+        description: mainstream, fintech_sponsor_bank or unknown. Based on outside knowledge; see seeds/issuer_segment_map.csv.
+      - name: issuer_name
+        type: categorical
+        expr: issuer_name_std
+      - name: card_scheme
+        type: categorical
+      - name: fan_country
+        type: categorical
+      - name: region
+        type: categorical
+      - name: geo_corridor
+        type: categorical
+
+      # --- verification signals
+      - name: avs_outcome
+        type: categorical
+      - name: three_ds_status
+        type: categorical
+
+      # --- outcome
+      - name: gateway_status
+        type: categorical
+      - name: decline_reason
+        type: categorical
+        expr: decline_reason_std
+      - name: decline_category
+        type: categorical
+      - name: business_action
+        type: categorical
+        expr: coalesce(business_action, case when not is_approved then 'reason_not_captured' end)
+        description: What OnlyFans should do about a decline, e.g. retry_at_better_time or stop_and_treat_as_cancellation.
+
+      # --- base filters
+      - name: is_payment
+        type: categorical
+      - name: is_analysis_eligible
+        type: categorical
+
+    measures:
+      - name: attempts
+        description: Count of attempts.
+        agg: count
+        expr: transaction_key
+      - name: approvals
+        description: Count of approved attempts.
+        agg: sum
+        expr: case when is_approved then 1 else 0 end
+      - name: non_approvals
+        description: Count of declined or failed attempts.
+        agg: sum
+        expr: case when is_approved then 0 else 1 end
+      - name: attempted_value_usd
+        agg: sum
+        expr: amount_usd
+      - name: approved_value_usd
+        agg: sum
+        expr: case when is_approved then amount_usd else 0 end
+      - name: declined_value_usd
+        agg: sum
+        expr: case when is_approved then 0 else amount_usd end
+      - name: retry_eligible_declined_value_usd
+        agg: sum
+        expr: >
+          case when not is_approved and business_action in
+            ('retry_at_better_time', 'reroute_or_retry_once', 'step_up_authentication')
+          then amount_usd else 0 end
+      - name: do_not_retry_declined_value_usd
+        agg: sum
+        expr: >
+          case when not is_approved and business_action in
+            ('stop_and_treat_as_cancellation', 'hard_stop')
+          then amount_usd else 0 end
+      - name: creator_earnings_usd
+        agg: sum
+        expr: case when is_approved then creator_share_usd else 0 end
+      - name: creator_earnings_lost_usd
+        agg: sum
+        expr: case when is_approved then 0 else creator_share_usd end
+      - name: paying_fans
+        agg: count_distinct
+        expr: case when is_approved then fan_email_token end
+
+metrics:
+  # ------------------------------------------------------------------ volume
+  - name: payment_attempts
+    label: Payment attempts
+    description: >
+      Authorisation attempts for real payments. Excludes $0 card-verification
+      checks, duplicate approvals and status conflicts. This is the
+      denominator of every payment rate.
+    type: simple
+    type_params:
+      measure: attempts
+    filter: |
+      {{ Dimension('payment_attempt__is_payment') }} = true
+      and {{ Dimension('payment_attempt__is_analysis_eligible') }} = true
+
+  - name: approved_payments
+    label: Approved payments
+    description: Payment attempts the issuer approved.
+    type: simple
+    type_params:
+      measure: approvals
+    filter: |
+      {{ Dimension('payment_attempt__is_payment') }} = true
+      and {{ Dimension('payment_attempt__is_analysis_eligible') }} = true
+
+  - name: declined_payments
+    label: Declined payments
+    description: Payment attempts that were declined or failed. Technical failures count, because the Fan did not pay.
+    type: simple
+    type_params:
+      measure: non_approvals
+    filter: |
+      {{ Dimension('payment_attempt__is_payment') }} = true
+      and {{ Dimension('payment_attempt__is_analysis_eligible') }} = true
+
+  # ------------------------------------------------------------------ rates
+  - name: authorisation_rate
+    label: Authorisation rate
+    description: >
+      THE headline metric. Approved payments / payment attempts. Attempt-level,
+      not Fan-level: a Fan retried three times counts three attempts. Always
+      read it alongside revenue_stream, because renewals and Fan-present
+      purchases authorise at very different rates.
+    type: ratio
+    type_params:
+      numerator: approved_payments
+      denominator: payment_attempts
+
+  - name: fan_present_authorisation_rate
+    label: Fan-present authorisation rate
+    description: >
+      Authorisation rate on fan-initiated payments only (tips,
+      pay-per-view, new subscriptions including first charges). The right
+      metric for comparing gateways, because renewals authorise badly everywhere.
+    type: ratio
+    type_params:
+      numerator: approved_payments
+      denominator: payment_attempts
+    filter: |
+      {{ Dimension('payment_attempt__payment_group') }} = 'fan-initiated'
+
+  - name: renewal_authorisation_rate
+    label: Subscription renewal authorisation rate
+    description: >
+      Authorisation rate on subscription renewals. The main lever for creator
+      income retention.
+    type: ratio
+    type_params:
+      numerator: approved_payments
+      denominator: payment_attempts
+    filter: |
+      {{ Dimension('payment_attempt__revenue_stream') }} = 'subscription renewal'
+
+  - name: value_authorisation_rate
+    label: Value authorisation rate
+    description: Approved value / attempted value. Weights each payment by its size.
+    type: ratio
+    type_params:
+      numerator: approved_value_usd
+      denominator: attempted_value_usd
+
+  # ------------------------------------------------------------------ value
+  - name: attempted_value_usd
+    label: Attempted value (USD)
+    description: Sum of attempted payment amounts in USD. BRL is converted at the proxy rate in dbt_project.yml.
+    type: simple
+    type_params:
+      measure: attempted_value_usd
+    filter: |
+      {{ Dimension('payment_attempt__is_payment') }} = true
+      and {{ Dimension('payment_attempt__is_analysis_eligible') }} = true
+
+  - name: approved_value_usd
+    label: Approved value (USD)
+    description: Gross value of approved payments, before the creator/platform split.
+    type: simple
+    type_params:
+      measure: approved_value_usd
+    filter: |
+      {{ Dimension('payment_attempt__is_payment') }} = true
+      and {{ Dimension('payment_attempt__is_analysis_eligible') }} = true
+
+  - name: declined_value_usd
+    label: Declined value (USD)
+    description: Gross value of declined or failed payments.
+    type: simple
+    type_params:
+      measure: declined_value_usd
+    filter: |
+      {{ Dimension('payment_attempt__is_payment') }} = true
+      and {{ Dimension('payment_attempt__is_analysis_eligible') }} = true
+
+  - name: retry_eligible_declined_value_usd
+    label: Retry-eligible declined value (USD)
+    description: >
+      Declined value where the right action is to retry: at a better time,
+      once on another route, or after stepping up authentication. This is
+      an upper bound on recovery, not a forecast.
+    type: simple
+    type_params:
+      measure: retry_eligible_declined_value_usd
+    filter: |
+      {{ Dimension('payment_attempt__is_payment') }} = true
+      and {{ Dimension('payment_attempt__is_analysis_eligible') }} = true
+
+  - name: do_not_retry_declined_value_usd
+    label: Do-not-retry declined value (USD)
+    description: >
+      Declined value that must not be retried: Fans cancelling via their bank,
+      stop-retry instructions, lost/stolen and fraud declines. Retrying these
+      risks scheme retry penalties and chargebacks.
+    type: simple
+    type_params:
+      measure: do_not_retry_declined_value_usd
+    filter: |
+      {{ Dimension('payment_attempt__is_payment') }} = true
+      and {{ Dimension('payment_attempt__is_analysis_eligible') }} = true
+
+  # ------------------------------------------------------------------ OnlyFans economics
+  - name: creator_earnings_usd
+    label: Creator earnings (USD)
+    description: Approved value x the creator share (var creator_share, 80%).
+    type: simple
+    type_params:
+      measure: creator_earnings_usd
+    filter: |
+      {{ Dimension('payment_attempt__is_payment') }} = true
+      and {{ Dimension('payment_attempt__is_analysis_eligible') }} = true
+
+  - name: creator_earnings_lost_usd
+    label: Creator earnings lost to declines (USD)
+    description: Declined value x the creator share. Frames declines as lost creator income.
+    type: simple
+    type_params:
+      measure: creator_earnings_lost_usd
+    filter: |
+      {{ Dimension('payment_attempt__is_payment') }} = true
+      and {{ Dimension('payment_attempt__is_analysis_eligible') }} = true
+
+  - name: platform_revenue_usd
+    label: Platform revenue (USD)
+    description: Approved value less creator earnings, i.e. the platform's 20% share. Before processing fees, which are not in the data.
+    type: derived
+    type_params:
+      expr: approved_value_usd - creator_earnings_usd
+      metrics:
+        - name: approved_value_usd
+        - name: creator_earnings_usd
+
+  - name: paying_fans
+    label: Paying Fans
+    description: >
+      Distinct Fans with at least one approved payment, keyed on tokenised
+      email because Fan IDs are missing or placeholder on most rows.
+    type: simple
+    type_params:
+      measure: paying_fans
+    filter: |
+      {{ Dimension('payment_attempt__is_payment') }} = true
+      and {{ Dimension('payment_attempt__is_analysis_eligible') }} = true
+
+  # ------------------------------------------------------------------ unfiltered building blocks
+  - name: all_rows
+    label: All exported rows
+    description: Every row in the export, with no base filter. A building block for trust metrics only; never report it as payments.
+    type: simple
+    type_params:
+      measure: attempts
+
+  - name: all_row_approvals
+    label: Approvals across all rows
+    description: Approvals with no base filter. A building block only.
+    type: simple
+    type_params:
+      measure: approvals
+
+  # ------------------------------------------------------------------ card checks
+  - name: card_verification_pass_rate
+    label: Card verification pass rate
+    description: Share of $0 card-verification checks that passed. Reported separately from payment authorisation.
+    type: ratio
+    type_params:
+      numerator: all_row_approvals
+      denominator: all_rows
+    filter: |
+      {{ Dimension('payment_attempt__transaction_purpose') }} = 'card_verification'
+      and {{ Dimension('payment_attempt__is_analysis_eligible') }} = true
+
+  # ------------------------------------------------------------------ trust
+  - name: analysis_eligible_share
+    label: Analysis-eligible share of rows
+    description: >
+      Share of all exported rows (payments and verification checks) safe to
+      count: not a duplicate approval and not a status conflict. A data-trust
+      metric; a fall signals a pipeline regression.
+    type: ratio
+    type_params:
+      # a separate metric, not a filtered all_rows: MetricFlow collapses a
+      # ratio whose numerator and denominator share a name, returning 1.0
+      numerator: eligible_rows
+      denominator: all_rows
+
+  - name: eligible_rows
+    label: Analysis-eligible rows
+    description: Rows safe to count, including verification checks. A building block only.
+    type: simple
+    type_params:
+      measure: attempts
+    filter: |
+      {{ Dimension('payment_attempt__is_analysis_eligible') }} = true
+
+saved_queries:
+  - name: gateway_scorecard
+    description: Headline payment metrics by gateway and revenue stream.
+    query_params:
+      metrics:
+        - payment_attempts
+        - authorisation_rate
+        - approved_value_usd
+        - declined_value_usd
+        - creator_earnings_lost_usd
+      group_by:
+        - Dimension('payment_attempt__gateway')
+        - Dimension('payment_attempt__revenue_stream')
+
+  - name: decline_actions
+    description: Declined value by the action OnlyFans should take.
+    query_params:
+      metrics:
+        - declined_payments
+        - declined_value_usd
+      group_by:
+        - Dimension('payment_attempt__business_action')

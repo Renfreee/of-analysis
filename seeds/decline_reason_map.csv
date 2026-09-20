@@ -1,0 +1,78 @@
+raw_acquirer_response,decline_reason_std,decline_category,is_retryable,recovery_lever,business_action
+Insufficient funds,insufficient_funds,issuer_soft_decline,true,Retry scheduling,retry_at_better_time
+INSUFF FUNDS,insufficient_funds,issuer_soft_decline,true,Retry scheduling,retry_at_better_time
+Not sufficient funds,insufficient_funds,issuer_soft_decline,true,Retry scheduling,retry_at_better_time
+DECLINE,do_not_honour,issuer_generic,true,Gateway failover / network token,reroute_or_retry_once
+DECLINED,do_not_honour,issuer_generic,true,Gateway failover / network token,reroute_or_retry_once
+Declined,do_not_honour,issuer_generic,true,Gateway failover / network token,reroute_or_retry_once
+Do not honour,do_not_honour,issuer_generic,true,Gateway failover / network token,reroute_or_retry_once
+Do not honor,do_not_honour,issuer_generic,true,Gateway failover / network token,reroute_or_retry_once
+Generic Decline,do_not_honour,issuer_generic,true,Gateway failover / network token,reroute_or_retry_once
+Not Authorized,do_not_honour,issuer_generic,true,Gateway failover / network token,reroute_or_retry_once
+Autorizacao negada,do_not_honour,issuer_generic,true,Gateway failover / local acquiring,reroute_or_retry_once
+The transaction was declined by the processor,do_not_honour,issuer_generic,true,Gateway failover / network token,reroute_or_retry_once
+Refer to card issuer,refer_to_issuer,issuer_generic,false,Cardholder contact required,ask_fan_to_update_card
+CALL,refer_to_issuer,issuer_generic,false,Cardholder contact required,ask_fan_to_update_card
+HOLD-CALL,refer_to_issuer,issuer_generic,false,Cardholder contact required,ask_fan_to_update_card
+Issuer sign-off,refer_to_issuer,issuer_generic,false,Cardholder contact required,ask_fan_to_update_card
+Suspected fraud,suspected_fraud,fraud_risk_block,false,Risk rule tuning,hard_stop
+Scrub Decline,gateway_risk_scrub,fraud_risk_block,false,Risk rule tuning,fix_gateway_or_integration
+"Blocked by cardholder, contact cardholder",cardholder_block,fraud_risk_block,false,Cardholder contact required,stop_and_treat_as_cancellation
+"Blocked, first used-transaction from new cardholder, and card not properly unblocked",new_card_not_activated,fraud_risk_block,false,Cardholder activation prompt,ask_fan_to_update_card
+BLOCKED 1ST USE,new_card_not_activated,fraud_risk_block,false,Cardholder activation prompt,ask_fan_to_update_card
+Account Not Yet Activated,new_card_not_activated,fraud_risk_block,false,Cardholder activation prompt,ask_fan_to_update_card
+"Stolen card, pick-up",lost_or_stolen_card,fraud_risk_block,false,Hard decline - suppress retries,hard_stop
+"Lost card, pick-up",lost_or_stolen_card,fraud_risk_block,false,Hard decline - suppress retries,hard_stop
+Pick-up card,lost_or_stolen_card,fraud_risk_block,false,Hard decline - suppress retries,hard_stop
+Pick-up,lost_or_stolen_card,fraud_risk_block,false,Hard decline - suppress retries,hard_stop
+Restricted card,restricted_card,issuer_policy,false,Hard decline - suppress retries,hard_stop
+Policy,issuer_policy_block,issuer_policy,false,Routing / local acquiring,issuer_blocks_category
+Life Cycle,issuer_lifecycle_block,issuer_policy,false,Account Updater,ask_fan_to_update_card
+"Transaction not supported, blocked by issuer",not_supported_by_issuer,issuer_policy,false,Routing / local acquiring,issuer_blocks_category
+Transaction not permitted to cardholder,not_permitted_cardholder,issuer_policy,false,Routing / local acquiring,issuer_blocks_category
+Transaction not permitted on terminal,not_permitted_terminal,merchant_config,false,Gateway configuration fix,fix_gateway_or_integration
+Transaction not permitted to terminal,not_permitted_terminal,merchant_config,false,Gateway configuration fix,fix_gateway_or_integration
+SERV NOT ALLOWED,not_permitted_terminal,merchant_config,false,Gateway configuration fix,fix_gateway_or_integration
+Invalid merchant,invalid_merchant,merchant_config,false,Gateway configuration fix,fix_gateway_or_integration
+SEC VIOLATION,security_violation,merchant_config,false,Gateway configuration fix,fix_gateway_or_integration
+Transaction cannot be completed; violation of law,legal_restriction,issuer_policy,false,Hard decline - suppress retries,hard_stop
+Revocation of Authorization Order,authorisation_revoked,issuer_policy,false,Hard decline - suppress retries,stop_and_treat_as_cancellation
+Revocation of authorisation order - Resubmission not allowed,authorisation_revoked,issuer_policy,false,Hard decline - suppress retries,stop_and_treat_as_cancellation
+stop retries,stop_retries_instruction,issuer_policy,false,Hard decline - suppress retries,stop_and_treat_as_cancellation
+Expired card,expired_card,card_data_issue,false,Account Updater,ask_fan_to_update_card
+Invalid card number (no such number),invalid_card_number,card_data_issue,false,Account Updater,ask_fan_to_update_card
+Invalid Card Number,invalid_card_number,card_data_issue,false,Account Updater,ask_fan_to_update_card
+"Invalid Card Number, failed Mod 10 validation",invalid_card_number,card_data_issue,false,Account Updater,ask_fan_to_update_card
+CARD NO. ERROR,invalid_card_number,card_data_issue,false,Account Updater,ask_fan_to_update_card
+Invalid Issue Number,invalid_card_number,card_data_issue,false,Account Updater,ask_fan_to_update_card
+No such issuer,no_such_issuer,card_data_issue,false,Account Updater,ask_fan_to_update_card
+Unable to locate record on file,no_such_issuer,card_data_issue,false,Account Updater,ask_fan_to_update_card
+CID MISMATCH,cvv_mismatch,card_data_issue,false,Re-prompt cardholder for CVC,ask_fan_to_update_card
+CVV ERROR,cvv_mismatch,card_data_issue,false,Re-prompt cardholder for CVC,ask_fan_to_update_card
+"Negative CAM, dCVV, iCVV, or CVV results",cvv_mismatch,card_data_issue,false,Re-prompt cardholder for CVC,ask_fan_to_update_card
+CANT VERIFY PIN,pin_verification_failed,card_data_issue,false,Re-prompt cardholder,ask_fan_to_update_card
+Failed AVS,avs_failure,card_data_issue,false,Improve billing address capture,ask_fan_to_update_card
+Authentication failure,authentication_failed,authentication,true,3DS step-up and resubmit,step_up_authentication
+Authorization failed - SCA is required,sca_required,authentication,true,3DS step-up and resubmit,step_up_authentication
+Authorization failed - Card type requires CCAUTHCAP transaction request - SCA is required.,sca_required,authentication,true,3DS step-up and resubmit,step_up_authentication
+Additional customer authentication required,sca_required,authentication,true,3DS step-up and resubmit,step_up_authentication
+Soft Decline - Authentication is Advised,soft_decline_sca,authentication,true,3DS step-up and resubmit,step_up_authentication
+Exceeds withdrawal frequency,velocity_limit_exceeded,velocity_limit,true,Retry after cool-off,retry_at_better_time
+Exceeds withdrawal limit,velocity_limit_exceeded,velocity_limit,true,Retry after cool-off,retry_at_better_time
+Exceeds withdrawal amount limit,velocity_limit_exceeded,velocity_limit,true,Retry after cool-off,retry_at_better_time
+Activity amount limit exceeded,velocity_limit_exceeded,velocity_limit,true,Retry after cool-off,retry_at_better_time
+Activity count limit exceeded,velocity_limit_exceeded,velocity_limit,true,Retry after cool-off,retry_at_better_time
+Invalid transaction,invalid_transaction,technical_error,true,Gateway retry,fix_gateway_or_integration
+INVALID TRANS,invalid_transaction,technical_error,true,Gateway retry,fix_gateway_or_integration
+Invalid transaction; contact card issuer,invalid_transaction,technical_error,true,Gateway retry,fix_gateway_or_integration
+Transaction error,processing_error,technical_error,true,Gateway retry,fix_gateway_or_integration
+AMOUNT ERROR,processing_error,technical_error,true,Gateway retry,fix_gateway_or_integration
+Re-enter transaction,processing_error,technical_error,true,Gateway retry,fix_gateway_or_integration
+System error,system_error,technical_error,true,Automatic retry / failover,fix_gateway_or_integration
+System malfunction,system_error,technical_error,true,Automatic retry / failover,fix_gateway_or_integration
+Issuer unavailable or switch inoperative,issuer_unavailable,technical_error,true,Automatic retry / failover,fix_gateway_or_integration
+NO REPLY,issuer_unavailable,technical_error,true,Automatic retry / failover,fix_gateway_or_integration
+Timeout/Retry,issuer_unavailable,technical_error,true,Automatic retry / failover,fix_gateway_or_integration
+Failed to create charge,gateway_error,technical_error,true,Automatic retry / failover,fix_gateway_or_integration
+Approved,not_a_decline_contamination,data_quality_anomaly,false,Pipeline fix - field contamination,data_fix
+APPROVE WITH ID,not_a_decline_contamination,data_quality_anomaly,false,Pipeline fix - field contamination,data_fix

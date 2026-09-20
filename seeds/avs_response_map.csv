@@ -1,0 +1,22 @@
+avs_response_raw,avs_code_std,avs_outcome
+"Exact match, nine digit ZIP and address",X,full_match
+"Nine-digit ZIP match, address does not",W,zip_only_match
+Address and five-digit ZIP match,Y,full_match
+"Five-digit ZIP matches, address does not",Z,zip_only_match
+"Address matches, ZIP does not",A,address_only_match
+Neither address nor ZIP matches,N,no_match
+Address information unavailable,U,not_verified
+Retry (system unavailable or timed out),R,not_verified
+Card type not supported,S,not_verified
+X,X,full_match
+W,W,zip_only_match
+Y,Y,full_match
+Z,Z,zip_only_match
+A,A,address_only_match
+N,N,no_match
+U,U,not_verified
+R,R,not_verified
+S,S,not_verified
+M,Y,full_match
+I,U,not_verified
+G,U,not_verified

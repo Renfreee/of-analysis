@@ -1,0 +1,15 @@
+gateway,merchant_account,top_billing_countries,payment_group,attempts,auth_rate_pct,declined_value_usd
+vendor1,merchant_A,"GB, CA, IT",fan-initiated,593,89.7,2624.0
+vendor1,merchant_B,"US, SE",fan-initiated,2505,90.1,11710.0
+vendor2,merchant_A,BR,fan-initiated,45,64.4,96.0
+vendor2,merchant_C,"US, CA, TR",fan-initiated,644,71.4,9448.0
+vendor2,merchant_D,"MX, GB, AU",fan-initiated,583,69.5,5697.0
+vendor2,merchant_E,"US, CA, JP",fan-initiated,1206,80.1,13011.0
+vendor1,merchant_A,"GB, CA, IT",other merchant-initiated,21,42.9,390.0
+vendor1,merchant_B,"US, SE",other merchant-initiated,712,64.5,9213.0
+vendor1,merchant_A,"GB, CA, IT",subscription rebill,175,34.3,2494.0
+vendor1,merchant_B,"US, SE",subscription rebill,992,31.8,13504.0
+vendor2,merchant_A,BR,subscription rebill,34,17.6,434.0
+vendor2,merchant_C,"US, CA, TR",subscription rebill,245,33.9,3390.0
+vendor2,merchant_D,"MX, GB, AU",subscription rebill,276,30.8,4212.0
+vendor2,merchant_E,"US, CA, JP",subscription rebill,592,30.9,7940.0

@@ -1,0 +1,90 @@
+version: 2
+
+sources:
+  - name: raw_payments
+    description: >
+      Raw gateway export supplied with the case study brief: synthetic Fan
+      payment transaction logs from two payment providers, covering July 2026.
+      Loaded directly from CSV by DuckDB so the pipeline is reproducible from
+      the original file with no manual import step.
+    tables:
+      - name: fan_transactions
+        description: One row per transaction attempt as delivered by the vendor export.
+        meta:
+          external_location: >
+            read_csv('data/raw/Casestudy_Sept2026.csv',
+                     header = true,
+                     all_varchar = true,
+                     sample_size = -1)
+        # Every column below is defined once in models/_column_definitions.md and
+        # referenced from here, from staging and from the marts, so a column that
+        # keeps its meaning carries the same definition at every layer.
+        columns:
+          - name: vendor
+            description: "{{ doc('col__gateway') }}"
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ['vendor1', 'vendor2']
+          - name: merchant_account
+            description: "{{ doc('col__merchant_account') }}"
+          - name: psp_reference
+            description: "{{ doc('col__psp_reference') }}"
+            tests:
+              - not_null
+          - name: scheme_reference
+            description: "{{ doc('col__scheme_reference') }}"
+          - name: payment_method
+            description: "{{ doc('col__payment_method_raw') }}"
+          - name: payment_method_variant
+            description: "{{ doc('col__card_product') }}"
+          - name: creation_date_ts
+            description: "{{ doc('col__creation_clock_raw') }}"
+          - name: creation_date_time_zone
+            description: "{{ doc('col__source_timezone') }}"
+          - name: currency
+            description: "{{ doc('col__currency') }}"
+          - name: amount
+            description: "{{ doc('col__amount') }}"
+          - name: transaction_type
+            description: "{{ doc('col__transaction_type_raw') }}"
+          - name: card_bin
+            description: "{{ doc('col__card_bin') }}"
+          - name: card_last_4
+            description: "{{ doc('col__card_last_4_raw') }}"
+          - name: shopper_ip
+            description: "{{ doc('col__fan_ip') }}"
+          - name: shopper_country
+            description: "{{ doc('col__fan_country') }}"
+          - name: shopper_email
+            description: "{{ doc('col__fan_email_token') }}"
+          - name: shopper_reference
+            description: "{{ doc('col__fan_reference') }}"
+          - name: issuer_name
+            description: "{{ doc('col__issuer_name') }}"
+          - name: issuer_bin
+            description: "{{ doc('col__issuer_bin') }}"
+          - name: issuer_country
+            description: "{{ doc('col__issuer_country') }}"
+          - name: billing_country
+            description: "{{ doc('col__billing_country') }}"
+          - name: acquirer_response
+            description: "{{ doc('col__gateway_status') }}"
+            tests:
+              - accepted_values:
+                  values: ['Approved', 'Declined', 'Failed']
+          - name: authorisation_code
+            description: "{{ doc('col__authorisation_code') }}"
+          - name: raw_acquirer_response
+            description: "{{ doc('col__decline_reason_raw') }}"
+          - name: three_d_directory_response
+            description: >
+              3-D Secure column whose meaning depends on the gateway: enrolment
+              on vendor 1, authentication outcome on vendor 2. Split into
+              three_ds_enrolment_raw and three_ds_outcome_raw in staging.
+          - name: three_d_authentication_response
+            description: "{{ doc('col__three_ds_outcome_raw') }}"
+          - name: cvc2_response
+            description: "{{ doc('col__cvc2_response_raw') }}"
+          - name: avs_response
+            description: "{{ doc('col__avs_response_raw') }}"

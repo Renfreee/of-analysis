@@ -1,0 +1,962 @@
+<title>Fan Payment Authorisation Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ground:    #f2f4f6;
+    --surface:   #ffffff;
+    --ink:       #14161a;
+    --ink-2:     #4e545e;
+    --ink-3:     #858c98;
+    --rule:      #e2e6ea;
+    --rule-soft: #eef1f4;
+    --accent:    #2a78d6;
+    --accent-deep: #184f95;
+    --accent-wash: #e8f0fb;
+    --series-2:  #eb6834;
+    --critical:  #c62f2f;
+    --crit-wash: #fbeaea;
+    --warning:   #a06a00;
+    --warn-wash: #fbf2e0;
+    --good:      #0a7d0a;
+    --good-wash: #e7f5e7;
+    --track:     #e5e9ed;
+
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:    #0e1012;
+      --surface:   #17191c;
+      --ink:       #f4f6f8;
+      --ink-2:     #b6bcc5;
+      --ink-3:     #848b95;
+      --rule:      #2b2f34;
+      --rule-soft: #212529;
+      --accent:    #61a0ea;
+      --accent-deep: #9ac3f3;
+      --accent-wash: #14243a;
+      --series-2:  #f07f4f;
+      --critical:  #e57373;
+      --crit-wash: #34191a;
+      --warning:   #e0aa3c;
+      --warn-wash: #302614;
+      --good:      #4caf50;
+      --good-wash: #172a18;
+      --track:     #2b2f34;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:    #0e1012;
+    --surface:   #17191c;
+    --ink:       #f4f6f8;
+    --ink-2:     #b6bcc5;
+    --ink-3:     #848b95;
+    --rule:      #2b2f34;
+    --rule-soft: #212529;
+    --accent:    #61a0ea;
+    --accent-deep: #9ac3f3;
+    --accent-wash: #14243a;
+    --series-2:  #f07f4f;
+    --critical:  #e57373;
+    --crit-wash: #34191a;
+    --warning:   #e0aa3c;
+    --warn-wash: #302614;
+    --good:      #4caf50;
+    --good-wash: #172a18;
+    --track:     #2b2f34;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .doc {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 18px 16px 40px;
+    max-width: 210mm;
+    margin: 0 auto;
+  }
+
+  .page {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 20px 22px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* ---------- type ---------- */
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  h1 {
+    font-size: 25px;
+    line-height: 1.15;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 4px 0 0;
+    text-wrap: balance;
+  }
+  h2 {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  h3 {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0;
+  }
+  p { margin: 0; }
+  .lede { color: var(--ink-2); font-size: 12.5px; }
+  .note { color: var(--ink-3); font-size: 11px; line-height: 1.45; }
+  strong { font-weight: 600; }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  /* One header on every page: deck line and page context, then the title. */
+  .phead {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 9px;
+  }
+  .phead .prow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+  }
+  .phead h1 {
+    font-size: 21px;
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  /* ---------- KPI row ---------- */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+  .kpi {
+    background: var(--surface);
+    padding: 11px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .kpi-val {
+    font-family: var(--mono);
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  .kpi-val.is-alert { color: var(--critical); }
+  .kpi-lab { font-size: 11px; color: var(--ink-2); line-height: 1.3; }
+  .kpi-sub { font-size: 10px; color: var(--ink-3); font-family: var(--mono); }
+
+  /* ---------- callout ---------- */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-wash);
+    padding: 10px 13px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .callout.is-critical { border-left-color: var(--critical); background: var(--crit-wash); }
+  .callout .k { font-weight: 600; }
+
+  /* ---------- bar charts ---------- */
+  figure { margin: 0; display: flex; flex-direction: column; gap: 7px; }
+  figcaption { font-size: 12px; font-weight: 600; color: var(--ink); }
+  .chart { display: flex; flex-direction: column; gap: 5px; }
+  .bar-row {
+    display: grid;
+    grid-template-columns: minmax(96px, 150px) 1fr auto;
+    align-items: center;
+    gap: 9px;
+  }
+  .bar-lab { font-size: 11.5px; color: var(--ink-2); line-height: 1.25; }
+  .bar-track {
+    background: var(--track);
+    height: 15px;
+    border-radius: 2px;
+    overflow: hidden;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 0 3px 3px 0;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .bar-fill.is-muted   { background: var(--ink-3); }
+  .bar-fill.is-alert   { background: var(--critical); }
+  .bar-fill.is-second  { background: var(--series-2); }
+  .bar-val {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    min-width: 46px;
+    text-align: right;
+  }
+  .legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 10.5px;
+    color: var(--ink-2);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .swatch {
+    width: 9px; height: 9px; border-radius: 2px; display: inline-block;
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+
+  /* ---------- tables ---------- */
+  .tbl-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 11.5px; }
+  th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 500;
+    padding: 0 8px 5px 0;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  td {
+    padding: 5px 8px 5px 0;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+    color: var(--ink-2);
+  }
+  td:first-child { color: var(--ink); }
+  td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+
+  .pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 5px;
+    border-radius: 2px;
+    white-space: nowrap;
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  .pill.crit { background: var(--crit-wash); color: var(--critical); }
+  .pill.high { background: var(--warn-wash); color: var(--warning); }
+  .pill.med  { background: var(--rule-soft); color: var(--ink-2); }
+  .pill.low  { background: var(--good-wash); color: var(--good); }
+
+  /* ---------- recommendations ---------- */
+  .rec {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 11px;
+    border-top: 1px solid var(--rule);
+    padding-top: 11px;
+  }
+  .rec-n {
+    font-family: var(--mono);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1.1;
+  }
+  .rec-body { display: flex; flex-direction: column; gap: 6px; }
+  .rec-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    color: var(--ink-2);
+    border-top: 1px dotted var(--rule);
+    padding-top: 6px;
+  }
+  .rec-meta b {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 500;
+    display: block;
+  }
+  .caveat {
+    font-size: 11px;
+    color: var(--ink-2);
+    background: var(--rule-soft);
+    padding: 7px 10px;
+    border-radius: 2px;
+  }
+  .caveat b { color: var(--ink); font-weight: 600; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .stack { display: flex; flex-direction: column; gap: 9px; }
+
+  .foot {
+    margin-top: auto;
+    padding-top: 9px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 9.5px;
+    color: var(--ink-3);
+    font-family: var(--mono);
+  }
+
+  @media (max-width: 640px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+    .bar-row { grid-template-columns: minmax(80px, 118px) 1fr auto; }
+    h1 { font-size: 21px; }
+  }
+
+  /* ---------- print ---------- */
+  @page { size: 13.333in 7.5in; margin: 0; }
+
+  @media print {
+    :root {
+      --ground: #ffffff; --surface: #ffffff;
+      --ink: #14161a; --ink-2: #4e545e; --ink-3: #6f7681;
+      --rule: #d7dce1; --rule-soft: #e9edf0;
+      --accent: #2a78d6; --accent-wash: #eaf2fc;
+      --critical: #c62f2f; --crit-wash: #fbebeb;
+      --warning: #8a5c00; --warn-wash: #fbf3e2;
+      --track: #e5e9ed;
+    }
+    body { background: #fff; font-size: 9.5pt; }
+    .doc { padding: 0; gap: 0; max-width: none; margin: 0; }
+    .page {
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      break-after: page;
+      page-break-after: always;
+      break-inside: avoid;
+      min-height: 0;
+    }
+    .page:last-child { break-after: auto; page-break-after: auto; }
+    .kpi-val { font-size: 16pt; }
+    h1 { font-size: 16pt; }
+    h2 { font-size: 11.5pt; }
+    .page { gap: 11px; }
+    figure, .rec, .callout, table { break-inside: avoid; }
+  }
+</style>
+<style>
+  .heat { display:grid; grid-template-columns: minmax(90px,1.1fr) 1fr 1fr; gap:3px; font-size:12px; }
+  .heat .h { font-family:var(--mono); font-size:9.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3); padding:4px 8px; align-self:end; }
+  .heat .r { color:var(--ink-2); padding:10px 8px; align-self:center; line-height:1.3; }
+  .heat .c { padding:12px 10px; border-radius:2px; display:flex; flex-direction:column; gap:1px;
+             print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+  .heat .c b { font-family:var(--mono); font-size:22px; font-weight:600; letter-spacing:-.02em; line-height:1.1; }
+  .heat .c span { font-size:10.5px; font-family:var(--mono); }
+  .c.t1 { background:var(--accent-deep); color:var(--surface); }
+  .c.t2 { background:var(--accent); color:var(--surface); }
+  .c.t3 { background:var(--crit-wash); color:var(--critical); }
+  .c.t4 { background:var(--critical); color:var(--surface); }
+  .issue { display:grid; grid-template-columns: 1fr; gap:3px; border-top:1px solid var(--rule); padding-top:9px; }
+  .issue h3 { display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; }
+  .issue p { font-size:12px; color:var(--ink-2); }
+  ul.tight { margin:0; padding-left:18px; display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--ink-2); }
+  ul.tight strong { color:var(--ink); }
+  .three { display:grid; grid-template-columns: repeat(3,1fr); gap:16px; }
+  @media (max-width: 640px) { .three { grid-template-columns:1fr; } .heat .c b { font-size:18px; } }
+  a { color:var(--accent-deep); }
+  .caveat.aligned { margin-left:37px; }
+  .gloss table { font-size:10.5px; }
+  .gloss td { padding:4px 8px 4px 0; }
+  .grp { font-size:10px; font-family:var(--mono); letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3); margin-top:2px; }
+</style>
+<style>
+  .funnel { display:grid; grid-template-columns: repeat(4, 1fr); gap:1px; background:var(--rule); border:1px solid var(--rule); }
+  .funnel > div { background:var(--surface); padding:9px 11px; display:flex; flex-direction:column; gap:2px; }
+  .funnel .v { font-family:var(--mono); font-size:18px; font-weight:600; letter-spacing:-.02em; }
+  .funnel .v.minus { color:var(--ink-3); }
+  .funnel .l { font-size:10.5px; color:var(--ink-2); line-height:1.3; }
+  /* the fixes read as a strip across the page, like the funnel above them */
+  .fixstrip { display:grid; grid-template-columns: repeat(5, 1fr); gap:1px; background:var(--rule); border:1px solid var(--rule); }
+  .fixstrip > div { background:var(--surface); padding:9px 11px; display:flex; flex-direction:column; gap:5px; justify-content:space-between; }
+  .fixstrip .l { font-size:10.2px; color:var(--ink); line-height:1.35; }
+  .fixstrip .v { font-family:var(--mono); font-size:10px; line-height:1.4; color:var(--ink); }
+  .fixstrip .v i { font-style:normal; color:var(--ink-3); }
+  .fixstrip .v .ar { color:var(--ink-3); padding:0 5px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px 18px; }
+  .bar-row.sm { grid-template-columns: minmax(90px, 128px) 1fr auto; }
+  .bar-row.sm .bar-track { height:12px; }
+  .cnt { display:inline-block; min-width:40px; text-align:right; color:var(--ink-3); font-size:10px; margin-left:6px; }
+  .l4l { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+  .vs { display:grid; grid-template-columns: 1fr 1fr; gap:1px; background:var(--rule); border:1px solid var(--rule); }
+  .vs > div { background:var(--surface); padding:10px 12px; display:flex; flex-direction:column; gap:1px; }
+  .vs b { font-family:var(--mono); font-size:22px; font-weight:600; letter-spacing:-.02em; line-height:1.1; }
+  .vs .win b { color:var(--accent-deep); }
+  .vs span { font-size:10.5px; color:var(--ink-2); }
+  .qw { display:inline-block; font-family:var(--mono); font-size:9px; font-weight:600; letter-spacing:.05em; text-transform:uppercase;
+        padding:2px 6px; border-radius:2px; background:var(--good-wash); color:var(--good); print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+  .act td:nth-child(3), .act td:nth-child(4) { font-family:var(--mono); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .act .mini { display:inline-block; height:8px; background:var(--accent); border-radius:1px; vertical-align:middle; margin-right:6px;
+               print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+  .act .mini.muted { background:var(--ink-3); }
+  .act table { font-size:10.5px; }
+  .act td { padding:4px 8px 4px 0; vertical-align:middle; }
+  .act table { table-layout:fixed; }
+  .act th:nth-child(1) { width:30%; } .act th:nth-child(2) { width:36%; }
+  .act th:nth-child(3) { width:11%; text-align:right; padding-right:14px; }
+  .act th:nth-child(4) { width:10%; text-align:center; } .act th:nth-child(5) { width:13%; padding-left:14px; }
+  .act td:nth-child(3) { text-align:right; padding-right:14px; }
+  .act td:nth-child(5) { padding-left:14px; white-space:nowrap; }
+  .act td.heatc { text-align:center; font-family:var(--mono); font-weight:600; padding:0; border-bottom:none;
+                  box-shadow: inset 0 0 0 3px var(--surface); border-radius:4px; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+  .act .pie { display:inline-block; width:14px; height:14px; border-radius:50%; vertical-align:middle; margin-right:6px; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+  .act .piel { font-family:var(--mono); font-size:9.5px; color:var(--ink-3); }
+  .act .todo { font-size:9.5px; color:var(--ink-2); }
+  .act td strong { font-weight:600; }
+  .act .split { display:inline-flex; width:66px; height:8px; vertical-align:middle; margin-right:6px; }
+  .act .split i { display:block; height:100%; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+  .act .split .g1 { background:var(--accent); }
+  .act .split .g2 { background:var(--series-2); }
+  .recs { display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; }
+  .reccard { border-top:2px solid var(--accent); padding-top:8px; display:flex; flex-direction:column; gap:5px; }
+  .reccard h3 { font-size:12.5px; }
+  .reccard p { font-size:11px; color:var(--ink-2); line-height:1.45; }
+  .reccard .meta { font-family:var(--mono); font-size:10px; color:var(--ink-3); }
+  .why td:first-child { width:34%; }
+  @media (max-width: 640px) { .funnel, .grid2, .l4l, .recs { grid-template-columns:1fr; } }
+</style>
+
+<style>
+  /* compact type scale so each section fits one printed page (A4 or Letter) */
+  body { font-size: 13px; }
+  .page { gap: 12px; }
+  h1 { font-size: 22px; } h2 { font-size: 15px; } h3 { font-size: 12.5px; }
+  .note { font-size: 10.5px; }
+  table { font-size: 10.5px; } th { font-size: 9px; }
+  td { padding: 4px 8px 4px 0; }
+  .callout { font-size: 11.5px; padding: 8px 12px; }
+  .caveat { font-size: 10.5px; }
+  figcaption { font-size: 11.5px; }
+  .bar-lab, .bar-val { font-size: 10.5px; }
+  .kpi-val { font-size: 21px; } .kpi { padding: 9px 11px 10px; }
+  .issue p { font-size: 11px; } .issue { padding-top: 7px; }
+  .funnel .v { font-size: 16px; } .funnel .l { font-size: 10px; }
+  .vs b { font-size: 20px; }
+  .reccard p { font-size: 10.5px; }
+  .l4l p.note { font-size: 10.5px !important; }
+  ul.tight { font-size: 11px; }
+  .act table { font-size: 10px; } .act .todo { font-size: 9px; }
+  .gloss table { font-size: 10px; }
+  p, .lede, .note, .callout, .caveat { max-width: none; }
+</style>
+
+<style>
+  /* ---------- 16:9 slides: fixed 1280 x 720, content flows top to bottom ---------- */
+  body { background: var(--ground); }
+  .deck { display: flex; flex-direction: column; align-items: center; gap: 24px; padding-block: 24px; }
+  .slide { width: 1280px; height: 720px; flex: none; box-sizing: border-box; padding: 34px 48px 20px;
+           background: var(--surface); border: 1px solid var(--rule); border-radius: 4px;
+           display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+  .s-body { flex: 1; min-height: 0; overflow: hidden; }
+  .s-fit { display: flex; flex-direction: column; gap: 11px; }
+  .slide .foot { margin-top: 0; }
+  /* use the width: side-by-side where the portrait page stacked */
+  .slide .grid2 { grid-template-columns: repeat(4, 1fr); gap: 12px 22px; }
+  .slide .bar-row.sm { grid-template-columns: minmax(70px, 96px) 1fr auto; gap: 6px; }
+  .slide .cnt { min-width: 28px; }
+  .slide .issue { padding-top: 5px; }
+  .need table { table-layout: fixed; }
+  .need th:nth-child(1), .need td:nth-child(1) { width: 25%; }
+  .need th:nth-child(2), .need td:nth-child(2) { width: 25%; }
+  .need th:nth-child(3), .need td:nth-child(3) { width: 34%; }
+  .need th:nth-child(4), .need td:nth-child(4) { width: 16%; }
+  .need td { vertical-align: top; }
+  .need .todo { display: block; font-size: 9.5px; color: var(--ink-3); }
+  .need .pill { margin-right: 4px; }
+  .sum table { table-layout: fixed; }
+  .sum th:nth-child(1), .sum td:nth-child(1) { width: 40%; }
+  .sum th:nth-child(2), .sum td:nth-child(2) { width: 13%; }
+  .sum th:nth-child(3), .sum td:nth-child(3) { width: 11%; }
+  .sum th:nth-child(4), .sum td:nth-child(4) { width: 23%; }
+  .sum th:nth-child(5), .sum td:nth-child(5) { width: 13%; }
+  .sum td { padding: 7px 10px 7px 0; line-height: 1.5; }
+  .sum td strong { font-weight: 600; }
+  .sum .todo { display: block; margin-top: 3px; font-size: 9.5px; color: var(--ink-3); line-height: 1.45; }
+  .sum .pill { margin-right: 4px; }
+  .slide ul.tight { gap: 8px; line-height: 1.55; }
+  .slide .lede { line-height: 1.55; }
+  /* slide 2: looser tables and more air between sections */
+  .slide .funnel > div { padding: 10px 12px; }
+  .slide h2 + .tbl-wrap td { padding: 6px 10px 6px 0; line-height: 1.45; }
+  .need td { padding: 6.5px 10px 6.5px 0; line-height: 1.4; }
+  .need .todo { margin-top: 3px; line-height: 1.4; }
+  /* slide 3: charts two across, two down */
+  .slide .grid2 { grid-template-columns: repeat(2, 1fr); gap: 16px 34px; }
+  .slide .bar-row.sm { grid-template-columns: minmax(96px, 132px) 1fr auto; gap: 9px; }
+  .slide .cnt { min-width: 40px; }
+  .slide figure .tbl-wrap td { padding: 7.5px 8px 7.5px 0; }
+  .slide .chart { gap: 7px; }
+  .slide .bar-track { height: 17px; }
+  /* slide 5: taller decline rows */
+  .act td { padding: 7px 8px 7px 0; }
+  .act .todo { line-height: 1.4; }
+  /* a heading and the thing it labels travel together: slack falls between blocks, never inside one */
+  .s-fit > .blk { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+  .s-fit > .blk > .caveat, .s-fit > .blk > .callout { margin-top: 4px; }
+  .s-fit > .titleblk { gap: 10px; }
+  /* slide 2 runs full width, one column: wide tables wrap less, so the type can stay readable */
+  .dense table { font-size: 10.2px; }
+  .dense th { font-size: 8.5px; }
+  .dense .lede { font-size: 11.5px; }
+  .dense .callout { font-size: 10.8px; padding: 8px 12px; }
+  .dense .funnel .v { font-size: 15px; }
+  .dense .funnel .l { font-size: 9.5px; }
+  .dense h2 { font-size: 13.5px; }
+  h2 .subtle { font-family: var(--mono); font-size: 9.5px; font-weight: 500; letter-spacing: .08em;
+               text-transform: uppercase; color: var(--ink-3); margin-left: 8px; }
+  .dense .fixes td { padding: 8px 10px 8px 0; line-height: 1.5; }
+  .dense .need td { padding: 8px 10px 8px 0; line-height: 1.5; }
+  .dense .need .todo { font-size: 9.2px; margin-top: 3px; }
+  .dense .fixes table { table-layout: fixed; }
+  .dense .fixes th:nth-child(1), .dense .fixes td:nth-child(1) { width: 48%; }
+  .dense .fixes th:nth-child(2), .dense .fixes td:nth-child(2) { width: 26%; }
+  .dense .fixes th:nth-child(3), .dense .fixes td:nth-child(3) { width: 26%; }
+  .dense .need th:nth-child(1), .dense .need td:nth-child(1) { width: 24%; }
+  .dense .need th:nth-child(2), .dense .need td:nth-child(2) { width: 24%; }
+  .dense .need th:nth-child(3), .dense .need td:nth-child(3) { width: 35%; }
+  .dense .need th:nth-child(4), .dense .need td:nth-child(4) { width: 17%; }
+  .dense .need td:nth-child(4) { white-space: normal; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 24px; }
+  @media print {
+    html, body { background: #fff; margin: 0; padding: 0; }
+    .deck { padding: 0; gap: 0; zoom: 1 !important; }
+    .slide { border: none; border-radius: 0; break-after: page; }
+    .slide:last-child { break-after: auto; }
+  }
+</style>
+<div class="deck">
+  <section class="slide">
+    <div class="s-body"><div class="s-fit">
+    <div class="blk titleblk">
+<div class="phead">
+      <div class="prow"><span class="eyebrow">Fan Payments &middot; Authorisation Review &middot; July 2026</span><span class="eyebrow">Summary and actions</span></div>
+      <h1>What are July&rsquo;s declines costing us?</h1>
+    </div>
+
+    <p class="lede">$84.2k of July&rsquo;s payments were declined, and $67.4k of that was creators&rsquo; earnings. Across 10,000 attempts on two providers, two thirds of the loss sits in two places we can act on: subscription rebills, and fan&#8209;initiated payments on Gateway 2.</p>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-val">67.8%</div><div class="kpi-lab">Approval rate</div><div class="kpi-sub">8,632 real payments</div></div>
+      <div class="kpi"><div class="kpi-val">$274.7k</div><div class="kpi-lab">Value attempted</div><div class="kpi-sub">all in USD</div></div>
+      <div class="kpi"><div class="kpi-val is-alert">$84.2k</div><div class="kpi-lab">Value declined</div><div class="kpi-sub">31% of value</div></div>
+      <div class="kpi"><div class="kpi-val is-alert">$67.4k</div><div class="kpi-lab">Creator earnings lost</div><div class="kpi-sub">80% creator share</div></div>
+    </div>
+
+    <div class="blk">
+    <h3>Biggest takeaways from the data</h3>
+    <ul class="tight">
+      <li><strong>Rebills fail 2 in 3 times.</strong> 31.6% approval, against 83.4% when the fan is present. They are 27% of payments but 38% of declined value. Creators lost $25.6k on rebills, more than they earned from them.</li>
+      <li><strong>One provider is 11 points better.</strong> On identical traffic (US card, fan&#8209;initiated, mainstream bank, verified address) Gateway 1 approves 93.5% against 82.8%. Inside Gateway 2, merchant_E beats merchant_C on the same traffic.</li>
+      <li><strong>Weak card and address data costs approvals.</strong> Unverified addresses approve 57% against 88%. Fintech and neobank cards approve 16% against 49% on merchant&#8209;initiated charges.</li>
+    </ul>
+    </div>
+
+    <div class="tbl-wrap sum">
+      <table>
+        <thead><tr><th>Do this</th><th>At stake</th><th>Priority</th><th>Effort to test</th><th>Owner</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Route verified US traffic to Gateway 1, and merchant_C&rsquo;s volume to merchant_E</strong><br><span class="todo">10.7 and 5.5&#8209;point gaps on like&#8209;for&#8209;like traffic</span></td>
+            <td class="n">~$8.4k / month</td>
+            <td><span class="pill crit">High</span></td>
+            <td><span class="pill low">Low</span> routing change, no new data</td>
+            <td>Payments</td>
+          </tr>
+          <tr>
+            <td><strong>Retry rebill declines at better times; never retry hard declines</strong><br><span class="todo">$38.1k sits in &ldquo;retry later&rdquo;; $13.6k should never be retried</span></td>
+            <td class="n">$38.1k pool</td>
+            <td><span class="pill crit">High</span></td>
+            <td><span class="pill high">High</span> needs fan ID and timestamps first</td>
+            <td>Payments + Product</td>
+          </tr>
+          <tr>
+            <td><strong>Fix card details before we charge</strong><br><span class="todo">Address capture at checkout, $0 pre&#8209;check, account updater</span></td>
+            <td class="n">$23.3k pool</td>
+            <td><span class="pill med">Medium</span></td>
+            <td><span class="pill high">High</span> checkout and billing changes</td>
+            <td>Product</td>
+          </tr>
+          <tr>
+            <td><strong>A/B test the traffic we can&rsquo;t compare</strong><br><span class="todo">Rest of world, fintech cards, weak address checks, &ldquo;do not honour&rdquo; retries</span></td>
+            <td class="n">To be sized</td>
+            <td><span class="pill med">By volume</span></td>
+            <td><span class="pill med">Medium</span> split traffic, wait for a result</td>
+            <td>Payments</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    </div></div>
+    <div class="foot"><span>Fan Payments &middot; Authorisation Review</span><span>1 / 5</span></div>
+  </section>
+  <section class="slide dense">
+    <div class="s-body"><div class="s-fit">
+    <div class="blk titleblk">
+<div class="phead">
+      <div class="prow"><span class="eyebrow">Fan Payments &middot; Authorisation Review &middot; July 2026</span><span class="eyebrow">Data quality</span></div>
+      <h1>The data we have, and the gaps that block us</h1>
+    </div>
+
+    <p class="lede">Cleaned in a repeatable SQL pipeline (dbt): every issue is labelled, nothing is deleted, so Finance can still reconcile every row.</p>
+    </div>
+
+    <div class="funnel">
+      <div><span class="v">10,000</span><span class="l">rows in the export</span></div>
+      <div><span class="v minus">&minus;1,366</span><span class="l">$0 card checks: not payments, reported separately</span></div>
+      <div><span class="v minus">&minus;2</span><span class="l">duplicate charges: same card charged twice</span></div>
+      <div><span class="v">8,632</span><span class="l">real payments analysed</span></div>
+    </div>
+
+    <div class="blk">
+      <h2>What I fixed <span class="subtle">before &rarr; after</span></h2>
+      <div class="fixstrip">
+        <div><span class="l">Took $0 card checks out of payments</span><span class="v"><i>avg $23.76</i><span class="ar">&rarr;</span>$31.46</span></div>
+        <div><span class="l">Mapped 77 decline spellings to 35 reasons and 9 actions</span><span class="v"><i>18.9%</i><span class="ar">&rarr;</span>44.6% insuff. funds</span></div>
+        <div><span class="l">Treated Gateway 2&rsquo;s <span class="num">00000</span> as a blank auth code</span><span class="v"><i>47 conflicts</i><span class="ar">&rarr;</span>1 real</span></div>
+        <div><span class="l">Grouped fan&#8209; vs merchant&#8209;initiated, like for like</span><span class="v"><i>70% labelled</i><span class="ar">&rarr;</span>99.9%</span></div>
+        <div><span class="l">Converted 87 BRL payments to USD (proxy rate 5.50)</span><span class="v"><i>mixed currency</i><span class="ar">&rarr;</span>all USD</span></div>
+      </div>
+    </div>
+
+    <div class="blk">
+      <h2>What we need from engineering</h2>
+<div class="tbl-wrap need">
+      <table>
+        <thead><tr><th>Gap in the data</th><th>What it blocks</th><th>What we need</th><th>Effort</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>No unique transaction ID</strong><br><span class="todo">55 references shared by different fans (111 rows)</span></td>
+            <td>Reconciling against each provider&rsquo;s reports; joining refunds and chargebacks. De&#8209;duplicating on it would delete real payments</td>
+            <td>A unique ID per attempt, issued by us</td>
+            <td><span class="pill low">Low</span> ours to fix</td>
+          </tr>
+          <tr>
+            <td><strong>No fan, subscription or creator ID</strong><br><span class="todo">9,916 card tokens across 10,000 rows; Gateway 2 sends no fan reference</span></td>
+            <td>Following a fan across retries and providers; measuring recovery; showing which creators lose most</td>
+            <td>A hashed <span class="num">fan_id</span> from the email we already hold, so no personal data is exposed, plus subscription, creator and product type on every charge</td>
+            <td><span class="pill low">Low</span> ours to fix</td>
+          </tr>
+          <tr>
+            <td><strong>Broken timestamps</strong><br><span class="todo">Only MM:SS survives; the file went through a spreadsheet</span></td>
+            <td>Trends, payday effects, retry timing, real duplicate detection</td>
+            <td>Full date, time and timezone, from a direct extract, not a spreadsheet</td>
+            <td><span class="pill low">Low</span> ours to fix</td>
+          </tr>
+          <tr>
+            <td><strong>Inconsistent provider data</strong><br><span class="todo">77 decline spellings; Gateway 2 omits the bank on 28% and the card scheme on 39%</span></td>
+            <td>Comparing providers, bank&#8209;level routing, sizing the fintech problem</td>
+            <td>One standard for every provider: at the source where they allow it, otherwise in dbt, with engineering and data keeping the map accurate</td>
+            <td><span class="pill high">Higher</span> third&#8209;party, and more providers to come</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <div class="callout"><span class="k">Working agreement.</span> What we generate is quick to fix; provider data is not, and each new provider adds a dialect. Engineering should tell data before onboarding one, with a sample payload, so the mapping is ready on day one.</div>
+    </div></div>
+    <div class="foot"><span>Every step is listed in the accompanying repository</span><span>2 / 5</span></div>
+  </section>
+  <section class="slide">
+    <div class="s-body"><div class="s-fit">
+<div class="phead">
+      <div class="prow"><span class="eyebrow">Fan Payments &middot; Authorisation Review &middot; July 2026</span><span class="eyebrow">8,632 real payments</span></div>
+      <h1>What factors drive lower approval rates?</h1>
+    </div>
+<div class="grid2">
+      <figure>
+        <figcaption>1 &middot; Payment type <span class="note" style="font-weight:400">approval &middot; payments</span></figcaption>
+        <div class="chart">
+          <div class="bar-row sm"><div class="bar-lab">Fan&#8209;initiated</div><div class="bar-track"><div class="bar-fill" style="width:83.4%"></div></div><div class="bar-val">83.4%<span class="cnt">5,576</span></div></div>
+          <div class="bar-row sm"><div class="bar-lab">Other merchant&#8209;init.</div><div class="bar-track"><div class="bar-fill is-muted" style="width:63.8%"></div></div><div class="bar-val">63.8%<span class="cnt">733</span></div></div>
+          <div class="bar-row sm"><div class="bar-lab">Subscription rebills</div><div class="bar-track"><div class="bar-fill is-alert" style="width:31.6%"></div></div><div class="bar-val">31.6%<span class="cnt">2,314</span></div></div>
+        </div>
+        <p class="note">Rebills are 27% of payments but 38% of declined value ($32.0k).</p>
+      </figure>
+
+      <figure>
+        <figcaption>2 &middot; Address check (fan&#8209;initiated)</figcaption>
+        <div class="chart">
+          <div class="bar-row sm"><div class="bar-lab">Full or ZIP match</div><div class="bar-track"><div class="bar-fill" style="width:88.4%"></div></div><div class="bar-val">88%<span class="cnt">4,333</span></div></div>
+          <div class="bar-row sm"><div class="bar-lab">Partial / no match</div><div class="bar-track"><div class="bar-fill is-muted" style="width:78.9%"></div></div><div class="bar-val">79%<span class="cnt">514</span></div></div>
+          <div class="bar-row sm"><div class="bar-lab">Not verified / none</div><div class="bar-track"><div class="bar-fill is-alert" style="width:56.7%"></div></div><div class="bar-val">57%<span class="cnt">729</span></div></div>
+        </div>
+        <p class="note">Weak address checks: 729 payments, $11.3k declined.</p>
+      </figure>
+
+      <figure>
+        <figcaption>3 &middot; Bank type</figcaption>
+        <div class="chart">
+          <div class="bar-row sm"><div class="bar-lab">Fan: mainstream</div><div class="bar-track"><div class="bar-fill" style="width:85.5%"></div></div><div class="bar-val">85.5%<span class="cnt">4,361</span></div></div>
+          <div class="bar-row sm"><div class="bar-lab">Fan: fintech</div><div class="bar-track"><div class="bar-fill" style="width:74.3%"></div></div><div class="bar-val">74.3%<span class="cnt">513</span></div></div>
+          <div class="bar-row sm"><div class="bar-lab">Merchant: mainstream</div><div class="bar-track"><div class="bar-fill is-muted" style="width:48.5%"></div></div><div class="bar-val">48.5%<span class="cnt">2,053</span></div></div>
+          <div class="bar-row sm"><div class="bar-lab">Merchant: fintech</div><div class="bar-track"><div class="bar-fill is-alert" style="width:16.2%"></div></div><div class="bar-val">16.2%<span class="cnt">684</span></div></div>
+        </div>
+        <p class="note">Fintech cards on merchant&#8209;initiated charges: $12.0k declined.</p>
+      </figure>
+
+      <figure>
+        <figcaption>4 &middot; Payment size (fan&#8209;initiated)</figcaption>
+        <div class="chart">
+          <div class="bar-row sm"><div class="bar-lab">Under $25</div><div class="bar-track"><div class="bar-fill" style="width:83.7%"></div></div><div class="bar-val">83.7%<span class="cnt">3,425</span></div></div>
+          <div class="bar-row sm"><div class="bar-lab">$25&ndash;$100</div><div class="bar-track"><div class="bar-fill" style="width:84.9%"></div></div><div class="bar-val">84.9%<span class="cnt">1,681</span></div></div>
+          <div class="bar-row sm"><div class="bar-lab">$100+</div><div class="bar-track"><div class="bar-fill is-alert" style="width:75.5%"></div></div><div class="bar-val">75.5%<span class="cnt">470</span></div></div>
+        </div>
+        <p class="note">$100+ is 8% of fan payments but 57% of their declined value ($24.1k). Lower on both providers.</p>
+      </figure>
+    </div>
+<figure>
+      <figcaption>5 &middot; Provider &middot; merchant account</figcaption>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Account</th><th>Who it serves</th><th>Payments</th><th>Fan&#8209;init.</th><th>Rebills</th><th>All</th></tr></thead>
+          <tbody>
+            <tr><td>G1 &middot; merchant_B</td><td>US cards</td><td class="n">4,209</td><td class="n">90.1%</td><td class="n">31.8%</td><td class="n">72.0%</td></tr>
+            <tr><td>G1 &middot; merchant_A</td><td>UK &amp; international (81% UK)</td><td class="n">789</td><td class="n">89.7%</td><td class="n">34.3%</td><td class="n">76.2%</td></tr>
+            <tr><td>G2 &middot; merchant_E</td><td>US &amp; Canada</td><td class="n">1,798</td><td class="n">80.1%</td><td class="n">30.9%</td><td class="n">63.9%</td></tr>
+            <tr><td>G2 &middot; merchant_C</td><td>US &amp; Canada</td><td class="n">889</td><td class="n">71.4%</td><td class="n">33.9%</td><td class="n">61.1%</td></tr>
+            <tr><td>G2 &middot; merchant_D</td><td>Rest of world (Mexico, UK, Australia&hellip;)</td><td class="n">859</td><td class="n">69.5%</td><td class="n">30.8%</td><td class="n">57.0%</td></tr>
+            <tr><td>G2 &middot; merchant_A</td><td>Brazil, in BRL</td><td class="n">79</td><td class="n">64.4%</td><td class="n">17.6%</td><td class="n">44.3%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Accounts are chosen by the card&rsquo;s billing country. Names repeat across providers but are different accounts. Gateway 2&rsquo;s merchant_B (8 BRL payments) not shown.</p>
+    </figure>
+    </div></div>
+    <div class="foot"><span>Groupings explained in the appendix</span><span>3 / 5</span></div>
+  </section>
+  <section class="slide">
+    <div class="s-body"><div class="s-fit">
+<div class="phead">
+      <div class="prow"><span class="eyebrow">Fan Payments &middot; Authorisation Review &middot; July 2026</span><span class="eyebrow">Like&#8209;for&#8209;like comparisons</span></div>
+      <h1>Quick win: re&#8209;route similar traffic to channels with higher approval rates</h1>
+    </div>
+<p class="lede">The providers serve different fans: only Gateway 2 takes Latin America and most of the rest of the world. So I only compare where they overlap, holding everything else equal:
+      <strong>US card &middot; fan&#8209;initiated &middot; mainstream bank &middot; full address match.</strong></p>
+<div class="blk">
+    <div class="l4l">
+      <div class="stack">
+        <h3>Gateway 1 vs Gateway 2 <span class="qw">Quick win 1</span></h3>
+        <div class="vs">
+          <div class="win"><b>93.5%</b><span>Gateway 1 &middot; 1,804 payments</span></div>
+          <div><b>82.8%</b><span>Gateway 2 &middot; 907 payments</span></div>
+        </div>
+        <p class="note" style="font-size:11.5px;color:var(--ink-2)">A 10.7&#8209;point gap on identical traffic, statistically solid. The same banks approve more on Gateway 1 (e.g. Bank of America, US fan&#8209;initiated: 96% vs 77%).</p>
+        <p class="note" style="font-size:11.5px;color:var(--ink-2)"><strong>Action:</strong> route this segment to Gateway 1 as a test. Up to <strong>~$6.2k / month</strong> more approved value.</p>
+      </div>
+      <div class="stack">
+        <h3>merchant_E vs merchant_C (both Gateway 2) <span class="qw">Quick win 2</span></h3>
+        <div class="vs">
+          <div class="win"><b>84.6%</b><span>merchant_E &middot; 611 payments</span></div>
+          <div><b>79.1%</b><span>merchant_C &middot; 296 payments</span></div>
+        </div>
+        <p class="note" style="font-size:11.5px;color:var(--ink-2)">Same provider, same countries, same $40 average, same card and address mix. Across all fan&#8209;initiated payments the gap is 80.1% vs 71.4%.</p>
+        <p class="note" style="font-size:11.5px;color:var(--ink-2)"><strong>Action:</strong> ask the provider why merchant_C&rsquo;s setup differs, or move its volume to merchant_E. Up to <strong>~$2.2k / month</strong>.</p>
+      </div>
+    </div>
+<div class="caveat"><b>Check before moving volume:</b> provider fees, contract volume commitments and each provider&rsquo;s appetite for adult merchants aren&rsquo;t in the data. Gateway 2 may also receive Gateway 1&rsquo;s retries, which would make its traffic harder, and we can&rsquo;t check without a fan ID.</div>
+    </div>
+<div class="blk">
+    <h2>A/B test everything else</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Traffic</th><th>Why not move it straight away</th><th>Test</th></tr></thead>
+        <tbody>
+          <tr><td>Rest of world, Brazil</td><td>Only Gateway 2 serves it; Gateway 1 may lack local acquiring or BRL</td><td>Ask Gateway 1 first, then a small split</td></tr>
+          <tr><td>Subscription rebills</td><td>Both providers approve ~31&ndash;32%: no provider gap to capture</td><td>Test retry timing instead (page 5)</td></tr>
+          <tr><td>Fintech cards, weak address checks</td><td>Harder traffic on both providers; the gap may not transfer</td><td>Randomised 50/50 split</td></tr>
+          <tr><td>Gateway 2 &ldquo;do not honour&rdquo; declines</td><td>Generic soft decline; may pass on the other provider</td><td>Retry once on Gateway 1</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+<div class="callout">
+      <span class="k">How we&rsquo;d know it worked:</span> randomise, don&rsquo;t compare before and after. About 1,100 payments per group detects a 5&#8209;point lift. Watch chargebacks, fraud and fees alongside approval.
+    </div>
+    </div></div>
+    <div class="foot"><span>Sizing is for the July sample: upper bounds, not forecasts</span><span>4 / 5</span></div>
+  </section>
+  <section class="slide">
+    <div class="s-body"><div class="s-fit">
+<div class="phead">
+      <div class="prow"><span class="eyebrow">Fan Payments &middot; Authorisation Review &middot; July 2026</span><span class="eyebrow">$84.2k declined &middot; 2,778 payments</span></div>
+      <h1>Why payments are declined, what should we do?</h1>
+    </div>
+<div class="blk">
+    <div class="tbl-wrap act">
+      <table>
+        <thead><tr><th>Action</th><th>Decline reasons it covers</th><th>Declined</th><th>Share</th><th>G1 / G2</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Retry later</strong><br><span class="todo">Retry at a better time, e.g. payday</span></td><td>Insufficient funds, velocity limit</td><td>$38.1k</td><td class="heatc" style="background:color-mix(in srgb, var(--accent) 85%, transparent);color:#fff">45%</td><td><svg class="pie" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" style="fill:var(--series-2)"/><circle cx="16" cy="16" r="8" style="fill:none;stroke:var(--accent)" stroke-width="16" stroke-dasharray="23.12 50.265" transform="rotate(-90 16 16)"/></svg><span class="piel">46/54</span></td></tr>
+          <tr><td><strong>Reroute / retry once</strong><br><span class="todo">Try the other provider once</span></td><td>Generic &ldquo;do not honour&rdquo;</td><td>$15.3k</td><td class="heatc" style="background:color-mix(in srgb, var(--accent) 48%, transparent);color:var(--ink)">18%</td><td><svg class="pie" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" style="fill:var(--series-2)"/><circle cx="16" cy="16" r="8" style="fill:none;stroke:var(--accent)" stroke-width="16" stroke-dasharray="2.51 50.265" transform="rotate(-90 16 16)"/></svg><span class="piel">5/95</span></td></tr>
+          <tr><td><strong>Hard stop</strong><br><span class="todo">Never retry</span></td><td>Lost or stolen, suspected fraud, restricted</td><td>$8.7k</td><td class="heatc" style="background:color-mix(in srgb, var(--accent) 32%, transparent);color:var(--ink)">10%</td><td><svg class="pie" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" style="fill:var(--series-2)"/><circle cx="16" cy="16" r="8" style="fill:none;stroke:var(--accent)" stroke-width="16" stroke-dasharray="45.74 50.265" transform="rotate(-90 16 16)"/></svg><span class="piel">91/9</span></td></tr>
+          <tr><td><strong>Ask fan to update card</strong><br><span class="todo">Prompt the fan</span></td><td>Expired, invalid number, CVV or address mismatch</td><td>$6.3k</td><td class="heatc" style="background:color-mix(in srgb, var(--accent) 26%, transparent);color:var(--ink)">7%</td><td><svg class="pie" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" style="fill:var(--series-2)"/><circle cx="16" cy="16" r="8" style="fill:none;stroke:var(--accent)" stroke-width="16" stroke-dasharray="26.14 50.265" transform="rotate(-90 16 16)"/></svg><span class="piel">52/48</span></td></tr>
+          <tr><td><strong>Fix provider setup</strong><br><span class="todo">Fix with the provider</span></td><td>Processing and system errors, invalid merchant</td><td>$4.9k</td><td class="heatc" style="background:color-mix(in srgb, var(--accent) 24%, transparent);color:var(--ink)">6%</td><td><svg class="pie" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" style="fill:var(--series-2)"/><circle cx="16" cy="16" r="8" style="fill:none;stroke:var(--accent)" stroke-width="16" stroke-dasharray="2.51 50.265" transform="rotate(-90 16 16)"/></svg><span class="piel">5/95</span></td></tr>
+          <tr><td><strong>Treat as cancellation</strong><br><span class="todo">Stop billing</span></td><td>Fan blocked us, authorisation revoked</td><td>$4.9k</td><td class="heatc" style="background:color-mix(in srgb, var(--accent) 24%, transparent);color:var(--ink)">6%</td><td><svg class="pie" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" style="fill:var(--series-2)"/><circle cx="16" cy="16" r="8" style="fill:none;stroke:var(--accent)" stroke-width="16" stroke-dasharray="49.76 50.265" transform="rotate(-90 16 16)"/></svg><span class="piel">99/1</span></td></tr>
+          <tr><td><strong>Bank blocks category</strong><br><span class="todo">Offer another payment method</span></td><td>Bank policy, not permitted for cardholder</td><td>$4.6k</td><td class="heatc" style="background:color-mix(in srgb, var(--accent) 22%, transparent);color:var(--ink)">5%</td><td><svg class="pie" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" style="fill:var(--series-2)"/><circle cx="16" cy="16" r="8" style="fill:none;stroke:var(--accent)" stroke-width="16" stroke-dasharray="50.27 50.265" transform="rotate(-90 16 16)"/></svg><span class="piel">100/0</span></td></tr>
+          <tr><td><strong>Step up authentication</strong><br><span class="todo">Send through 3&#8209;D Secure</span></td><td>3&#8209;D Secure required or failed</td><td>$0.7k</td><td class="heatc" style="background:color-mix(in srgb, var(--accent) 14%, transparent);color:var(--ink)">1%</td><td><svg class="pie" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" style="fill:var(--series-2)"/><circle cx="16" cy="16" r="8" style="fill:none;stroke:var(--accent)" stroke-width="16" stroke-dasharray="19.1 50.265" transform="rotate(-90 16 16)"/></svg><span class="piel">38/62</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Share = % of all declined value (darker = bigger). Pie = split by provider: <span style="color:var(--accent)">&#9632;</span> Gateway 1, <span style="color:var(--series-2)">&#9632;</span> Gateway 2. Recoverable: $65k. Gateway 1 reports specific reasons; Gateway 2 mostly generic &ldquo;do not honour&rdquo;, so the split partly reflects labelling.</p>
+    </div>
+<div class="blk">
+    <h2>Recommendations</h2>
+    <div class="recs">
+      <div class="reccard">
+        <h3>1 &middot; Smarter retries</h3>
+        <p>Retry insufficient&#8209;funds declines around payday, with a cap. Stop retrying hard stops and cancellations: it costs fees and breaks card&#8209;scheme retry rules.</p>
+        <span class="meta">$38.1k retry&#8209;later &middot; $13.6k never retry</span>
+      </div>
+      <div class="reccard">
+        <h3>2 &middot; Fix card details before we charge</h3>
+        <p>Capture the full billing address and use the $0 card check to catch bad details. For fintech cards, use account updater and remind fans before renewal.</p>
+        <span class="meta">$11.3k weak address &middot; $12.0k fintech</span>
+      </div>
+      <div class="reccard">
+        <h3>3 &middot; Use both providers</h3>
+        <p>Run the two quick wins on page 4. Retry &ldquo;do not honour&rdquo; once on the other provider. Review setup errors with each provider.</p>
+        <span class="meta">$15.3k reroute &middot; $4.9k setup</span>
+      </div>
+    </div>
+<div class="caveat"><b>Measure each one against a holdout:</b> recovered value within 7 days, plus chargebacks, fraud, retries per payment and cancellations.</div>
+    </div>
+    </div></div>
+    <div class="foot"><span>Declines mapped to one action each; mapping reviewed with Payments before use</span><span>5 / 5</span></div>
+  </section>
+  <section class="slide">
+    <div class="s-body"><div class="s-fit">
+<div class="phead">
+      <div class="prow"><span class="eyebrow">Fan Payments &middot; Authorisation Review &middot; July 2026</span><span class="eyebrow">Definitions &middot; assumptions</span></div>
+      <h1>Appendix: how values were grouped</h1>
+    </div>
+<div class="blk">
+    <h3>Payment groups, per provider</h3>
+    <div class="gloss tbl-wrap">
+      <table>
+        <thead><tr><th>Group</th><th>Gateway 1</th><th>Gateway 2</th><th>Approval (G1 / G2)</th></tr></thead>
+        <tbody>
+          <tr><td>Fan&#8209;initiated</td><td>No initiator tag (2,964) + first subscription charges tagged &ldquo;Initial MIT&rdquo; (134)</td><td>Code <span class="num">C</span> (2,478)</td><td class="n">90.0% / 75.1%</td></tr>
+          <tr><td>Subscription rebill</td><td>Merchant&#8209;initiated with placeholder fan ref <span class="num">&lsquo;5&rsquo;</span> (1,167)</td><td>Code <span class="num">M</span> (1,147)</td><td class="n">32.1% / 31.1%</td></tr>
+          <tr><td>Other merchant&#8209;initiated</td><td>Remaining merchant charges (733)</td><td>Not identifiable</td><td class="n">63.8% / &ndash;</td></tr>
+          <tr><td>Not a payment</td><td>&ndash;</td><td>$0 card checks (1,366)</td><td class="n">&ndash; / 71.5% pass</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+<div class="blk">
+    <h3>Definitions</h3>
+    <div class="gloss tbl-wrap">
+      <table>
+        <tbody>
+          <tr><td>Fan&#8209;initiated</td><td>The fan is present and starts the payment: tips, pay&#8209;per&#8209;view, new subscriptions.</td></tr>
+          <tr><td>First subscription charge</td><td>Fan&#8209;present, but it also sets up future merchant charges. Gateway 1 labels it merchant&#8209;initiated (&ldquo;Initial MIT&rdquo;); Gateway 2 labels it <span class="num">C</span>. Grouped as fan&#8209;initiated: 3&#8209;D Secure present, 81% approval.</td></tr>
+          <tr><td>Subscription rebill</td><td>A monthly charge to a saved card without the fan present.</td></tr>
+          <tr><td>Fintech / neobank</td><td>Cards from banks that issue for fintech, neobank and prepaid programmes: Sutton, Bancorp, Stride, Green Dot, Pathward (MetaBank). Based on industry knowledge.</td></tr>
+          <tr><td>Mainstream bank</td><td>Any other named bank. &ldquo;Unknown&rdquo; = no bank name (28% of Gateway 2), not shown.</td></tr>
+          <tr><td>Address check</td><td>Full or ZIP match; partial or no match; not verified or none returned.</td></tr>
+          <tr><td>Merchant account</td><td>OnlyFans&rsquo; account at each provider, chosen by the card&rsquo;s billing country. Key = provider + account.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+<div class="blk">
+    <h3>Assumptions to confirm with Payments / engineering</h3>
+    <ul class="tight">
+      <li>Gateway 2 <span class="num">C</span> / <span class="num">M</span> = fan&#8209;initiated / rebill; <span class="num">M</span> has nothing else in it</li>
+      <li>Gateway 1&rsquo;s &ldquo;Initial MIT&rdquo; charges are first subscription payments</li>
+      <li>$0 rows are card checks, not payments</li>
+      <li>BRL converted at 5.50 per USD (87 payments)</li>
+      <li>The fintech bank list above</li>
+    </ul>
+    </div>
+    </div></div>
+    <div class="foot"><span>Fan Payments &middot; Authorisation Review</span><span>Appendix</span></div>
+  </section>
+</div>
+<script>
+  // Fit each slide's content to its 16:9 frame: shrink if it would overflow, never enlarge,
+  // and share any leftover space between the blocks. Then fit the deck to the screen width.
+  function fitSlides() {
+    document.querySelectorAll('.s-body').forEach(function (box) {
+      var inner = box.firstElementChild;
+      inner.style.zoom = ''; inner.style.gap = '';
+      var lo = 0.5, hi = 1.0;
+      for (var i = 0; i < 14; i++) {
+        var mid = (lo + hi) / 2;
+        inner.style.zoom = mid;
+        if (inner.getBoundingClientRect().height <= box.getBoundingClientRect().height + 0.5) lo = mid;
+        else hi = mid;
+      }
+      inner.style.zoom = lo;
+      var slack = box.getBoundingClientRect().height - inner.getBoundingClientRect().height;
+      if (lo > 0.99 && slack > 24) {
+        var n = inner.children.length - 1;
+        inner.style.gap = Math.min(54, 11 + (n > 0 ? slack / n / lo : 0)) + 'px';
+      }
+    });
+  }
+  function fitDeck() {
+    document.querySelector('.deck').style.zoom = Math.min(1, (window.innerWidth - 32) / 1282);
+  }
+  function run() { fitSlides(); fitDeck(); }
+  run();
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(run);
+  window.addEventListener('load', run);
+  setTimeout(run, 400);
+  var t; window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(run, 150); });
+  window.addEventListener('beforeprint', function () { document.querySelector('.deck').style.zoom = 1; });
+  window.addEventListener('afterprint', fitDeck);
+</script>

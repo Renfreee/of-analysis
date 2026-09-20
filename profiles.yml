@@ -1,0 +1,7 @@
+fan_payments:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: casestudy.duckdb
+      threads: 4

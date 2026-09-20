@@ -1,0 +1,59 @@
+name: 'fan_payments'
+version: '1.0.0'
+config-version: 2
+
+profile: 'fan_payments'
+
+model-paths: ['models']
+seed-paths: ['seeds']
+test-paths: ['tests']
+macro-paths: ['macros']
+analysis-paths: ['analyses']
+
+target-path: 'target'
+clean-targets:
+  - 'target'
+  - 'dbt_packages'
+
+vars:
+  # PROXY, not a sourced rate: the export carries no FX data. BRL per 1 USD,
+  # applied to the 87 BRL rows. Replace with the July 2026 monthly average
+  # from a published source before any figure is used for reconciliation.
+  fx_brl_per_usd: 5.50
+
+  # OnlyFans' published creator share of Fan payments (80/20).
+  creator_share: 0.80
+
+  # The export has no usable dates (DQ-01). All rows are stamped with the
+  # reporting month from the brief so the semantic layer has a time grain.
+  # Replace with the real transaction timestamp once the export is fixed.
+  reporting_period_start: '2026-07-01'
+
+models:
+  fan_payments:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts
+
+seeds:
+  fan_payments:
+    +schema: reference
+    decline_reason_map:
+      +column_types:
+        raw_acquirer_response: varchar
+        decline_reason_std: varchar
+        decline_category: varchar
+        is_retryable: boolean
+        recovery_lever: varchar
+        business_action: varchar
+    avs_response_map:
+      +column_types:
+        avs_response_raw: varchar
+        avs_code_std: varchar
+        avs_outcome: varchar

@@ -1,0 +1,21 @@
+view_type,reason,declines,pct_of_declines,rank_in_view
+normalised,insufficient_funds,1239,44.6,1
+normalised,do_not_honour,496,17.85,2
+normalised,cardholder_block,199,7.16,3
+normalised,suspected_fraud,141,5.08,4
+normalised,invalid_transaction,100,3.6,5
+normalised,issuer_policy_block,93,3.35,6
+normalised,issuer_lifecycle_block,82,2.95,7
+normalised,not_supported_by_issuer,70,2.52,8
+normalised,gateway_risk_scrub,44,1.58,9
+normalised,restricted_card,44,1.58,10
+raw (as supplied),Insufficient funds,597,21.6,1
+raw (as supplied),INSUFF FUNDS,450,16.28,2
+raw (as supplied),DECLINE,228,8.25,3
+raw (as supplied),"Blocked by cardholder, contact cardholder",199,7.2,4
+raw (as supplied),Not sufficient funds,192,6.95,5
+raw (as supplied),Suspected fraud,141,5.1,6
+raw (as supplied),DECLINED,139,5.03,7
+raw (as supplied),Policy,93,3.36,8
+raw (as supplied),INVALID TRANS,86,3.11,9
+raw (as supplied),Life Cycle,82,2.97,10

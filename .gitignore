@@ -1,0 +1,20 @@
+.venv/
+.venv-mf/
+.user.yml
+.claude/
+target/
+dbt_packages/
+logs/
+*.duckdb
+*.duckdb.wal
+.DS_Store
+__pycache__/
+prep/
+
+# Working files kept out of the submission
+docs/brief/
+docs/analysis_pack/
+docs/dashboard/
+docs/data_deep_dive.html
+docs/payments_explorer.html
+docs/data_quality_audit.md

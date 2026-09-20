@@ -1,0 +1,9 @@
+issuer_name_std,issuer_segment,basis
+SUTTON BANK,fintech_sponsor_bank,External knowledge: sponsor bank for fintech and neobank card programmes. Not derivable from this dataset.
+THE BANCORP BANK NATIONAL ASSO,fintech_sponsor_bank,External knowledge: sponsor bank for fintech and neobank card programmes. Not derivable from this dataset.
+THE BANCORP BANK,fintech_sponsor_bank,External knowledge: sponsor bank for fintech and neobank card programmes. Not derivable from this dataset.
+STRIDE BANK NATIONAL ASSOCIATION,fintech_sponsor_bank,External knowledge: sponsor bank for fintech and neobank card programmes. Not derivable from this dataset.
+GREEN DOT BANK DBA BONNEVILLE BANK,fintech_sponsor_bank,External knowledge: prepaid and fintech card issuer. Not derivable from this dataset.
+GREEN DOT BANK,fintech_sponsor_bank,External knowledge: prepaid and fintech card issuer. Not derivable from this dataset.
+METABANK,fintech_sponsor_bank,External knowledge: prepaid programme issuer (now Pathward). Not derivable from this dataset.
+PATHWARD NATIONAL ASSOCIATION,fintech_sponsor_bank,External knowledge: prepaid programme issuer (formerly MetaBank). Not derivable from this dataset.

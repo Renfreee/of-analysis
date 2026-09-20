@@ -1,0 +1,20 @@
+driver,segment,payments,auth_rate_pct,declined_value_usd
+1 payment type,fan-initiated,5576,83.4,42586.0
+1 payment type,other merchant-initiated,733,63.8,9602.0
+1 payment type,subscription rebill,2314,31.6,31974.0
+2 address check (fan-initiated),1 full or ZIP match,4333,88.4,26937.0
+2 address check (fan-initiated),2 partial or no match,514,79.0,4306.0
+2 address check (fan-initiated),3 not verified or none returned,729,56.7,11343.0
+3 bank type,fan-initiated / fintech_sponsor_bank,513,74.3,5299.0
+3 bank type,fan-initiated / mainstream,4361,85.5,30215.0
+3 bank type,merchant-initiated / fintech_sponsor_bank,684,16.2,11997.0
+3 bank type,merchant-initiated / mainstream,2053,48.5,25097.0
+4 payment size (fan-initiated),1 under $25,3425,83.7,6461.0
+4 payment size (fan-initiated),2 $25-$100,1681,84.9,12054.0
+4 payment size (fan-initiated),3 $100+,470,75.5,24071.0
+5 provider / merchant account,vendor1 / merchant_A,789,76.2,5508.0
+5 provider / merchant account,vendor1 / merchant_B,4209,72.0,34427.0
+5 provider / merchant account,vendor2 / merchant_A,79,44.3,529.0
+5 provider / merchant account,vendor2 / merchant_C,889,61.1,12838.0
+5 provider / merchant account,vendor2 / merchant_D,859,57.0,9909.0
+5 provider / merchant account,vendor2 / merchant_E,1798,63.9,20951.0
